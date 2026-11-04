@@ -13,6 +13,7 @@
     <string name="endpoint_label">エンドポイント</string>
     <string name="endpoint_unknown">未起動</string>
     <string name="paired_count">%1$d 件のエージェントとペア済み</string>
+    <string name="paired_none_hint">ペア済みエージェントなし · 下の「ペアリング」でコードを取得</string>
     <string name="service_switch">サービスを有効化</string>
 
     <string name="btn_pair">ペアリング</string>

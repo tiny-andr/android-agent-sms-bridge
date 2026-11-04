@@ -13,6 +13,7 @@
     <string name="endpoint_label">Endpoint</string>
     <string name="endpoint_unknown">Not running</string>
     <string name="paired_count">%1$d agent(s) paired</string>
+    <string name="paired_none_hint">No agent paired yet · tap Pairing below to get a code</string>
     <string name="service_switch">Enable service</string>
 
     <string name="btn_pair">Pairing</string>

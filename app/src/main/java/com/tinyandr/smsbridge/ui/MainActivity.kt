@@ -121,7 +121,12 @@ class MainActivity : AppCompatActivity() {
         val port = SmsBridge.settings.port
         b.tvEndpoint.text =
             if (running) "http://${localIp()}:$port" else getString(R.string.endpoint_unknown)
-        b.tvPaired.text = getString(R.string.paired_count, SmsBridge.clients.countActive())
+        val paired = SmsBridge.clients.countActive()
+        b.tvPaired.text = if (paired == 0) {
+            getString(R.string.paired_none_hint)
+        } else {
+            getString(R.string.paired_count, paired)
+        }
         b.tvIpHint.text = "${getString(R.string.ip_hint)}: ${localIp()}"
 
         suppressSwitch = true
