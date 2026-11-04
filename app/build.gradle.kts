@@ -20,6 +20,11 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            // Signed with the local debug key on purpose: the key stays on the
+            // maintainer's machine (so nobody else can forge an update) and
+            // existing debug installs can be upgraded in place without losing
+            // the paired clients.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

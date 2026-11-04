@@ -5,6 +5,10 @@ local.properties
 *.iml
 .idea/
 
+# Built APKs (released through GitHub Releases, not the repo)
+*.apk
+*.aab
+
 # Agent credentials (contains the pairing token) — never commit
 mcp/.smsbridge.json
 
