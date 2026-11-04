@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
+import com.tinyandr.smsbridge.BuildConfig
 import com.tinyandr.smsbridge.R
 import com.tinyandr.smsbridge.SmsBridge
 import com.tinyandr.smsbridge.databinding.ActivityMainBinding
@@ -127,7 +128,8 @@ class MainActivity : AppCompatActivity() {
         } else {
             getString(R.string.paired_count, paired)
         }
-        b.tvIpHint.text = "${getString(R.string.ip_hint)}: ${localIp()}"
+        b.tvIpHint.text =
+            "v${BuildConfig.VERSION_NAME} · ${getString(R.string.ip_hint)}: ${localIp()}"
 
         suppressSwitch = true
         b.swService.isChecked = running
