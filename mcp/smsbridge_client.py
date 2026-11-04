@@ -1,0 +1,192 @@
+"""SmsBridge client — talks to the HTTP API served by the android app on the phone.
+
+Auth: every request is signed with HMAC-SHA256 using the token obtained at pairing.
+
+    canonical = METHOD \n PATH \n RAW_QUERY_STRING \n TIMESTAMP_MS \n NONCE
+"""
+
+from __future__ import annotations
+
+import hashlib
+import hmac
+import json
+import os
+import secrets
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+DEFAULT_CONFIG = Path(os.environ.get(
+    "SMSBRIDGE_CONFIG",
+    str(Path(__file__).resolve().parent / ".smsbridge.json"),
+))
+DEFAULT_URL = os.environ.get("SMSBRIDGE_URL", "")
+
+# The phone is on the LAN. Never route it through a system proxy: urllib would
+# pick up HTTP_PROXY and a local proxy (Clash etc.) answers 502 for LAN hosts.
+_NO_PROXY_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+
+class SmsBridgeError(RuntimeError):
+    def __init__(self, message: str, status: int | None = None, payload: Any = None):
+        super().__init__(message)
+        self.status = status
+        self.payload = payload or {}
+
+
+@dataclass
+class Credentials:
+    base_url: str
+    client_id: str
+    token: str
+    client_name: str = "agent"
+
+    @classmethod
+    def load(cls, path: Path | None = None) -> "Credentials":
+        p = Path(path) if path else DEFAULT_CONFIG
+        if not p.exists():
+            raise SmsBridgeError(
+                f"not paired yet: {p} missing. run: python smsctl.py pair --url URL --code CODE"
+            )
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return cls(
+            base_url=data["base_url"],
+            client_id=data["client_id"],
+            token=data["token"],
+            client_name=data.get("client_name", "agent"),
+        )
+
+    def save(self, path: Path | None = None) -> Path:
+        p = Path(path) if path else DEFAULT_CONFIG
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({
+            "base_url": self.base_url,
+            "client_id": self.client_id,
+            "token": self.token,
+            "client_name": self.client_name,
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        try:
+            os.chmod(p, 0o600)
+        except OSError:
+            pass
+        return p
+
+
+def _http(method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: float):
+    req = urllib.request.Request(url, data=body, method=method)
+    for k, v in headers.items():
+        req.add_header(k, v)
+    try:
+        with _NO_PROXY_OPENER.open(req, timeout=timeout) as resp:
+            raw = resp.read()
+    except urllib.error.HTTPError as e:
+        raw = e.read()
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except Exception:
+            payload = {"raw": raw.decode("utf-8", "replace")}
+        msg = payload.get("error", {}).get("message") if isinstance(payload, dict) else None
+        raise SmsBridgeError(msg or f"HTTP {e.code}", status=e.code, payload=payload) from None
+    except urllib.error.URLError as e:
+        raise SmsBridgeError(f"cannot reach {url}: {e.reason}") from None
+    return json.loads(raw.decode("utf-8"))
+
+
+class SmsBridge:
+    def __init__(self, creds: Credentials, timeout: float = 15.0):
+        self.creds = creds
+        self.timeout = timeout
+
+    # ---------------------------------------------------------------- auth
+
+    def _sign(self, method: str, path: str, query: str) -> dict[str, str]:
+        ts = str(int(time.time() * 1000))
+        nonce = secrets.token_hex(12)
+        canonical = f"{method}\n{path}\n{query}\n{ts}\n{nonce}"
+        sig = hmac.new(
+            self.creds.token.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+        return {
+            "X-Client-Id": self.creds.client_id,
+            "X-Timestamp": ts,
+            "X-Nonce": nonce,
+            "X-Signature": sig,
+        }
+
+    def _call(self, method: str, path: str, params: dict[str, Any] | None = None,
+              body: dict[str, Any] | None = None) -> dict[str, Any]:
+        query = urllib.parse.urlencode(params, doseq=True) if params else ""
+        url = self.creds.base_url.rstrip("/") + path + (("?" + query) if query else "")
+        headers = self._sign(method, path, query)
+        raw_body = None
+        if body is not None:
+            raw_body = json.dumps(body).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        return _http(method, url, headers, raw_body, self.timeout)
+
+    # ------------------------------------------------------------ endpoints
+
+    def health(self) -> dict[str, Any]:
+        return _http("GET", self.creds.base_url.rstrip("/") + "/v1/health", {}, None, self.timeout)
+
+    def whoami(self) -> dict[str, Any]:
+        return self._call("GET", "/v1/whoami")
+
+    def sms(self, *, days: int | None = None, address: str | list[str] | None = None,
+            slot: int | None = None, box: str = "inbox", limit: int = 50,
+            offset: int = 0, since_id: int | None = None, q: str | None = None,
+            purpose: str | None = None) -> dict[str, Any]:
+        params: dict[str, Any] = {"box": box, "limit": limit}
+        if days is not None:
+            params["days"] = days
+        if address:
+            params["address"] = address if isinstance(address, str) else ",".join(address)
+        if slot is not None:
+            params["slot"] = slot
+        if offset:
+            params["offset"] = offset
+        if since_id is not None:
+            params["since_id"] = since_id
+        if q:
+            params["q"] = q
+        if purpose:
+            params["purpose"] = purpose
+        return self._call("GET", "/v1/sms", params)
+
+    def otp(self, *, address: str | None = None, days: int = 1,
+            slot: int | None = None, limit: int = 10) -> dict[str, Any]:
+        return self.sms(days=days, address=address, slot=slot, limit=limit, purpose="otp")
+
+    def events(self, since_seq: int = 0) -> dict[str, Any]:
+        return self._call("GET", "/v1/events", {"since_seq": since_seq})
+
+    def stats(self, days: int = 7) -> dict[str, Any]:
+        return self._call("GET", "/v1/stats", {"days": days})
+
+    def revoke_self(self) -> dict[str, Any]:
+        return self._call("POST", "/v1/revoke-self")
+
+
+# ------------------------------------------------------------------ pairing
+
+def pair(base_url: str, code: str, name: str = "agent", timeout: float = 15.0,
+         config_path: Path | None = None) -> Credentials:
+    body = json.dumps({"code": code, "name": name}).encode("utf-8")
+    resp = _http(
+        "POST", base_url.rstrip("/") + "/v1/pair",
+        {"Content-Type": "application/json"}, body, timeout,
+    )
+    if not resp.get("ok"):
+        raise SmsBridgeError("pairing rejected", payload=resp)
+    creds = Credentials(
+        base_url=base_url.rstrip("/"),
+        client_id=resp["client_id"],
+        token=resp["token"],
+        client_name=name,
+    )
+    creds.save(config_path)
+    return creds

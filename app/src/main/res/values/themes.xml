@@ -1,0 +1,22 @@
+<resources>
+    <style name="Theme.SmsBridge" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#3BA98F</item>
+        <item name="colorOnPrimary">#04120E</item>
+        <item name="colorSurface">#0B1117</item>
+        <item name="colorOnSurface">#F2F6F5</item>
+        <item name="colorOutlineVariant">#33FFFFFF</item>
+        <item name="android:windowBackground">@drawable/bg_app</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <style name="MonoCode">
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textSize">40sp</item>
+        <item name="android:letterSpacing">0.22</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>

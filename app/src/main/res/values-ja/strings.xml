@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">SMSブリッジ</string>
+
+    <string name="channel_name">SMSブリッジ サービス</string>
+    <string name="channel_desc">ローカル SMS API を維持します</string>
+    <string name="notif_title">SMSブリッジ実行中</string>
+    <string name="notif_text">ポート %1$d · ペア済み %2$d</string>
+    <string name="notif_stop">停止</string>
+
+    <string name="main_subtitle">ペア済みエージェントが SMS を読むためのローカル API</string>
+    <string name="status_running">実行中</string>
+    <string name="status_stopped">停止中</string>
+    <string name="endpoint_label">エンドポイント</string>
+    <string name="endpoint_unknown">未起動</string>
+    <string name="paired_count">%1$d 件のエージェントとペア済み</string>
+    <string name="service_switch">サービスを有効化</string>
+
+    <string name="btn_pair">ペアリング</string>
+    <string name="btn_settings">設定</string>
+    <string name="btn_selfcheck">セルフチェックと常駐</string>
+    <string name="btn_audit">監査ログ</string>
+
+    <string name="pair_title">ペアリング</string>
+    <string name="pair_code_hint">エージェント側でこの6桁コードを送信してください（5分間有効、1回限り）：</string>
+    <string name="pair_generate">新しいコードを生成</string>
+    <string name="pair_clients_title">ペア済みエージェント</string>
+    <string name="pair_no_clients">ペア済みエージェントなし</string>
+    <string name="pair_revoke">無効化</string>
+    <string name="pair_remove">削除</string>
+    <string name="pair_revoked">無効</string>
+    <string name="pair_create_time">作成</string>
+    <string name="pair_last_active">最終アクセス</string>
+    <string name="pair_requests">リクエスト</string>
+
+    <string name="settings_title">設定</string>
+    <string name="settings_port">待受ポート</string>
+    <string name="settings_max_days">最大取得日数（0 = 無制限）</string>
+    <string name="settings_max_limit">1回の最大件数</string>
+    <string name="settings_rate_limit">レート制限（回/分、0 = 無制限）</string>
+    <string name="settings_otp">OTP モードを許可（本文をマスク）</string>
+    <string name="settings_heartbeat">ハートビート（20秒の自己 ping、ベンダー凍結対策）</string>
+    <string name="settings_hold_locks">ネットワーク/CPU ロックを保持（安定するが電池消費増）</string>
+    <string name="settings_blocked">ブロック番号（カンマ区切り）</string>
+    <string name="settings_save">保存</string>
+    <string name="settings_saved">保存しました</string>
+    <string name="settings_restart_note">ポート変更後はサービスが自動再起動します</string>
+
+    <string name="selfcheck_title">セルフチェックと常駐</string>
+    <string name="selfcheck_read_sms">SMS 読み取り権限</string>
+    <string name="selfcheck_notif">通知権限</string>
+    <string name="selfcheck_battery">電池最適化の除外</string>
+    <string name="selfcheck_service">サービスが実行中</string>
+    <string name="selfcheck_network">LAN から到達可能</string>
+    <string name="selfcheck_rom">ベンダーの自動起動 / アプリ凍結</string>
+    <string name="selfcheck_battery_hint">Doze 中はネットワークが停止します。ホワイトリスト登録が必要です</string>
+    <string name="selfcheck_rom_hint">中国メーカー ROM（realme/OPPO など）の場合：1) アプリ管理 → 本アプリ → 電池動作を「バックグラウンド動作をすべて許可」にし、自動起動を許可；2) 省電力モードをオフ；3) 最近使ったアプリでロック。内蔵の20秒ハートビートが凍結対策になります。</string>
+    <string name="selfcheck_ok">正常</string>
+    <string name="selfcheck_fail">要対応</string>
+    <string name="selfcheck_fix">対応する</string>
+    <string name="selfcheck_rom_btn">アプリ設定を開く</string>
+
+    <string name="audit_title">監査ログ</string>
+    <string name="audit_empty">リクエストはまだありません</string>
+    <string name="audit_clear">クリア</string>
+
+    <string name="permission_denied">権限が拒否されました。機能を利用できません</string>
+    <string name="ip_hint">端末 IP</string>
+
+    <string name="lang_button">JA</string>
+    <string name="lang_title">言語</string>
+    <string name="lang_system">システムに従う</string>
+    <string name="lang_en">English</string>
+    <string name="lang_zh">简体中文</string>
+    <string name="lang_ja">日本語</string>
+</resources>

@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">短信桥</string>
+
+    <string name="channel_name">短信桥服务</string>
+    <string name="channel_desc">保持本地短信接口可访问</string>
+    <string name="notif_title">短信桥运行中</string>
+    <string name="notif_text">端口 %1$d · 已配对 %2$d</string>
+    <string name="notif_stop">停止</string>
+
+    <string name="main_subtitle">给已配对 Agent 读取短信的本地接口</string>
+    <string name="status_running">运行中</string>
+    <string name="status_stopped">已停止</string>
+    <string name="endpoint_label">接口地址</string>
+    <string name="endpoint_unknown">未启动</string>
+    <string name="paired_count">已配对 %1$d 个 Agent</string>
+    <string name="service_switch">启用服务</string>
+
+    <string name="btn_pair">配对管理</string>
+    <string name="btn_settings">设置</string>
+    <string name="btn_selfcheck">自检与保活</string>
+    <string name="btn_audit">审计日志</string>
+
+    <string name="pair_title">配对</string>
+    <string name="pair_code_hint">在 Agent 端提交这个 6 位码（5 分钟内有效，一次性）：</string>
+    <string name="pair_generate">生成新配对码</string>
+    <string name="pair_clients_title">已配对的 Agent</string>
+    <string name="pair_no_clients">还没有配对的 Agent</string>
+    <string name="pair_revoke">吊销</string>
+    <string name="pair_remove">删除</string>
+    <string name="pair_revoked">已吊销</string>
+    <string name="pair_create_time">创建</string>
+    <string name="pair_last_active">最后活跃</string>
+    <string name="pair_requests">请求</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_port">监听端口</string>
+    <string name="settings_max_days">最大可查天数（0 = 不限制）</string>
+    <string name="settings_max_limit">单次最大条数</string>
+    <string name="settings_rate_limit">限流（次/分钟, 0 = 不限）</string>
+    <string name="settings_otp">允许 OTP 模式（正文掩码）</string>
+    <string name="settings_heartbeat">心跳保活（20 秒本地自检，防厂商速冻）</string>
+    <string name="settings_hold_locks">常驻网络/CPU 锁（更稳但更耗电，默认关）</string>
+    <string name="settings_blocked">屏蔽号码（逗号分隔）</string>
+    <string name="settings_save">保存</string>
+    <string name="settings_saved">已保存</string>
+    <string name="settings_restart_note">改端口后服务会自动重启</string>
+
+    <string name="selfcheck_title">自检与保活</string>
+    <string name="selfcheck_read_sms">读取短信权限</string>
+    <string name="selfcheck_notif">通知权限</string>
+    <string name="selfcheck_battery">忽略电池优化</string>
+    <string name="selfcheck_service">服务在运行</string>
+    <string name="selfcheck_network">局域网可访问</string>
+    <string name="selfcheck_rom">厂商自启动 / 应用速冻</string>
+    <string name="selfcheck_battery_hint">Doze 下网络会被挂起，必须加入白名单</string>
+    <string name="selfcheck_rom_hint">国产 ROM（realme/OPPO 等）建议三步：1) 应用管理 → 本应用 → 耗电行为选「完全允许后台行为」、允许自启动；2) 关闭省电模式；3) 最近任务卡片下拉锁定。App 自带 20 秒心跳可对抗速冻，这些设置能让它更稳。</string>
+    <string name="selfcheck_ok">正常</string>
+    <string name="selfcheck_fail">需要处理</string>
+    <string name="selfcheck_fix">去处理</string>
+    <string name="selfcheck_rom_btn">打开应用设置</string>
+
+    <string name="audit_title">审计日志</string>
+    <string name="audit_empty">暂无请求记录</string>
+    <string name="audit_clear">清空</string>
+
+    <string name="permission_denied">权限被拒绝，功能不可用</string>
+    <string name="ip_hint">手机 IP</string>
+
+    <string name="lang_button">中</string>
+    <string name="lang_title">语言</string>
+    <string name="lang_system">跟随系统</string>
+    <string name="lang_en">English</string>
+    <string name="lang_zh">简体中文</string>
+    <string name="lang_ja">日本語</string>
+</resources>

@@ -1,0 +1,3 @@
+# SmsBridge agent side. The MCP server targets mcp>=2.0 (MCPServer API).
+# The CLI only needs the Python standard library.
+mcp>=2.0.0

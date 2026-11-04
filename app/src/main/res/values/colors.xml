@@ -1,0 +1,7 @@
+<resources>
+    <color name="brand">#2E7D6B</color>
+    <color name="brand_dark">#1F5C4E</color>
+    <color name="icon_bg">#2E7D6B</color>
+    <color name="ok">#2E7D32</color>
+    <color name="bad">#C62828</color>
+</resources>

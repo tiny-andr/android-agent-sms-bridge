@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">SMS Bridge</string>
+
+    <string name="channel_name">SMS Bridge service</string>
+    <string name="channel_desc">Keeps the local SMS API reachable</string>
+    <string name="notif_title">SMS Bridge is running</string>
+    <string name="notif_text">Port %1$d · %2$d paired</string>
+    <string name="notif_stop">Stop</string>
+
+    <string name="main_subtitle">Local API that lets paired agents read SMS</string>
+    <string name="status_running">Running</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="endpoint_label">Endpoint</string>
+    <string name="endpoint_unknown">Not running</string>
+    <string name="paired_count">%1$d agent(s) paired</string>
+    <string name="service_switch">Enable service</string>
+
+    <string name="btn_pair">Pairing</string>
+    <string name="btn_settings">Settings</string>
+    <string name="btn_selfcheck">Self-check &amp; keep-alive</string>
+    <string name="btn_audit">Audit log</string>
+
+    <string name="pair_title">Pairing</string>
+    <string name="pair_code_hint">Submit this 6-digit code on the agent side (valid 5 minutes, one-time):</string>
+    <string name="pair_generate">Generate new code</string>
+    <string name="pair_clients_title">Paired agents</string>
+    <string name="pair_no_clients">No agent paired yet</string>
+    <string name="pair_revoke">Revoke</string>
+    <string name="pair_remove">Remove</string>
+    <string name="pair_revoked">revoked</string>
+    <string name="pair_create_time">created</string>
+    <string name="pair_last_active">last active</string>
+    <string name="pair_requests">requests</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_port">Listen port</string>
+    <string name="settings_max_days">Max days back (0 = unlimited)</string>
+    <string name="settings_max_limit">Max messages per request</string>
+    <string name="settings_rate_limit">Rate limit (req/min, 0 = unlimited)</string>
+    <string name="settings_otp">Allow OTP mode (body masked)</string>
+    <string name="settings_heartbeat">Heartbeat (20s local self-ping, defeats vendor freezers)</string>
+    <string name="settings_hold_locks">Hold network/CPU locks (more stable, more battery)</string>
+    <string name="settings_blocked">Blocked numbers (comma separated)</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_saved">Saved</string>
+    <string name="settings_restart_note">Changing the port restarts the service automatically</string>
+
+    <string name="selfcheck_title">Self-check &amp; keep-alive</string>
+    <string name="selfcheck_read_sms">SMS read permission</string>
+    <string name="selfcheck_notif">Notification permission</string>
+    <string name="selfcheck_battery">Ignore battery optimization</string>
+    <string name="selfcheck_service">Service is running</string>
+    <string name="selfcheck_network">Reachable on LAN</string>
+    <string name="selfcheck_rom">Vendor auto-start / app freeze</string>
+    <string name="selfcheck_battery_hint">Doze suspends network access; whitelisting is required</string>
+    <string name="selfcheck_rom_hint">On Chinese vendor ROMs (realme/OPPO etc.): 1) App management → this app → battery behaviour 「allow all background activity」 and allow auto-start; 2) turn off power saving mode; 3) lock the app in recents. The built-in 20s heartbeat fights app freezing, these settings make it stable.</string>
+    <string name="selfcheck_ok">OK</string>
+    <string name="selfcheck_fail">Needs attention</string>
+    <string name="selfcheck_fix">Fix</string>
+    <string name="selfcheck_rom_btn">Open app settings</string>
+
+    <string name="audit_title">Audit log</string>
+    <string name="audit_empty">No requests yet</string>
+    <string name="audit_clear">Clear</string>
+
+    <string name="permission_denied">Permission denied, feature unavailable</string>
+    <string name="ip_hint">Phone IP</string>
+
+    <string name="lang_button">EN</string>
+    <string name="lang_title">Language</string>
+    <string name="lang_system">Follow system</string>
+    <string name="lang_en">English</string>
+    <string name="lang_zh">简体中文</string>
+    <string name="lang_ja">日本語</string>
+</resources>
