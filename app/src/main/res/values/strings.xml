@@ -32,6 +32,11 @@
     <string name="pair_create_time">created</string>
     <string name="pair_last_active">last active</string>
     <string name="pair_requests">requests</string>
+    <string name="pair_code_expired">Expired — tap the button below for a new code</string>
+    <string name="pair_code_remaining">%1$d s left · one-time</string>
+    <string name="pair_never">never</string>
+    <string name="pair_revoked_suffix"> (revoked)</string>
+    <string name="pair_new_agent">New agent paired</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_port">Listen port</string>

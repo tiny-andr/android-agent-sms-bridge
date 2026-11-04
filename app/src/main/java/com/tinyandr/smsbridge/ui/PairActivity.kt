@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.tinyandr.smsbridge.R
 import com.tinyandr.smsbridge.SmsBridge
@@ -22,10 +23,30 @@ class PairActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val fmt = SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
 
+    private var lastClientCount = -1
+    private var hadCode = false
+
+    /**
+     * Pairing happens over HTTP in another thread/process, so this screen cannot
+     * get a callback. Poll twice a second: a shared-pref read is cheap and the
+     * new agent then shows up the moment the phone answers the pair request.
+     */
     private val ticker = object : Runnable {
         override fun run() {
             updateCode()
-            handler.postDelayed(this, 1000)
+            val hasCode = SmsBridge.pairCodes.current() != null
+            val count = SmsBridge.clients.list().size
+            val justPaired = lastClientCount >= 0 && count > lastClientCount
+            if (count != lastClientCount || (hadCode && !hasCode)) {
+                renderClients()
+                if (justPaired) {
+                    Toast.makeText(this@PairActivity, R.string.pair_new_agent, Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+            lastClientCount = count
+            hadCode = hasCode
+            handler.postDelayed(this, 500)
         }
     }
 
@@ -46,6 +67,9 @@ class PairActivity : AppCompatActivity() {
         super.onResume()
         updateCode()
         renderClients()
+        lastClientCount = SmsBridge.clients.list().size
+        hadCode = SmsBridge.pairCodes.current() != null
+        handler.removeCallbacks(ticker)
         handler.post(ticker)
     }
 
@@ -58,12 +82,11 @@ class PairActivity : AppCompatActivity() {
         val cur = SmsBridge.pairCodes.current()
         if (cur == null) {
             b.tvPairCode.text = "------"
-            b.tvCodeExpiry.text = "已过期，点下方按钮生成新码"
+            b.tvCodeExpiry.text = getString(R.string.pair_code_expired)
         } else {
-            val code = cur.first
-            b.tvPairCode.text = code.chunked(3).joinToString(" ")
+            b.tvPairCode.text = cur.first.chunked(3).joinToString(" ")
             val left = ((cur.second - System.currentTimeMillis()) / 1000).coerceAtLeast(0)
-            b.tvCodeExpiry.text = "剩余 ${left} 秒 · 一次性"
+            b.tvCodeExpiry.text = getString(R.string.pair_code_remaining, left)
         }
     }
 
@@ -80,12 +103,15 @@ class PairActivity : AppCompatActivity() {
 
     private fun bindClient(item: ItemClientBinding, c: PairedClient) {
         item.tvName.text = c.name
-        item.tvMeta.text = "ID ${c.id.take(8)} · ${getString(R.string.pair_create_time)} ${fmt.format(Date(c.createdAt))}"
-        val lastActive = if (c.lastActiveAt == 0L) "从未" else fmt.format(Date(c.lastActiveAt))
+        item.tvMeta.text =
+            "ID ${c.id.take(8)} · ${getString(R.string.pair_create_time)} ${fmt.format(Date(c.createdAt))}"
+        val lastActive =
+            if (c.lastActiveAt == 0L) getString(R.string.pair_never)
+            else fmt.format(Date(c.lastActiveAt))
         item.tvStats.text =
             "${getString(R.string.pair_last_active)} $lastActive · ${getString(R.string.pair_requests)} ${c.requestCount} · ${c.lastIp}"
         if (c.revoked) {
-            item.tvName.text = "${c.name}（${getString(R.string.pair_revoked)}）"
+            item.tvName.text = "${c.name}${getString(R.string.pair_revoked_suffix)}"
             item.btnRevoke.isEnabled = false
             item.btnRevoke.alpha = 0.4f
         }

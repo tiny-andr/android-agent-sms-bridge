@@ -32,6 +32,11 @@
     <string name="pair_create_time">作成</string>
     <string name="pair_last_active">最終アクセス</string>
     <string name="pair_requests">リクエスト</string>
+    <string name="pair_code_expired">期限切れ — 下のボタンで新しいコードを生成</string>
+    <string name="pair_code_remaining">残り %1$d 秒 · 1 回限り</string>
+    <string name="pair_never">未使用</string>
+    <string name="pair_revoked_suffix">（無効）</string>
+    <string name="pair_new_agent">新しいエージェントをペアリングしました</string>
 
     <string name="settings_title">設定</string>
     <string name="settings_port">待受ポート</string>
