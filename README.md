@@ -1,106 +1,122 @@
-# 短信桥 · SmsBridge
+# SMS Bridge · SmsBridge
 
-把手机短信变成 Agent 能直接查的本地 HTTP 接口。查数据库在请求时按需发生，没有任何轮询定时器。
+**English** | [简体中文](README.zh.md) | [日本語](README.ja.md)
+
+Turn your phone's SMS into a local HTTP API that agents can query. The SMS database is only
+touched when a request arrives — there is no polling loop.
 
 ```
 ┌─────────────┐    HTTP + HMAC-SHA256    ┌──────────────┐
-│  手机 App    │ ◀──────────────────────▶ │    Agent     │
-│ 短信桥服务   │     局域网 / 隧道         │ CLI 或 MCP   │
+│  Phone app  │ ◀──────────────────────▶ │    Agent     │
+│ SMS Bridge  │    LAN / tunnel          │ CLI or MCP   │
 └─────────────┘                          └──────────────┘
 ```
 
-## 配对 Agent
+## Pair an Agent
 
-> 前提：Agent 所在机器能访问手机的 `8787` 端口（同一 WiFi，或 Tailscale / WireGuard 隧道）。
+> **You can let your agent do everything below for you. All you need is the SMS Bridge APK installed on your phone.**
 
-**① 手机端** —— 打开 App → 启用服务 → 进「配对管理」
+> Requirement: the agent's machine must be able to reach port `8787` on the phone
+> (same Wi-Fi, or a Tailscale / WireGuard tunnel).
 
-- 主界面显示接口地址，例如 `http://192.168.1.100:8787`
-- 配对页显示 6 位码（**5 分钟有效、一次性**）
+**① On the phone** — open the app → **Enable service** → open **Pairing**
 
-**② Agent 端配对**（只做一次）
+- the main screen shows the endpoint, e.g. `http://192.168.1.100:8787`
+- the pairing screen shows a 6-digit code (**valid 5 minutes, one-time**)
+
+**② On the agent side** — pair once
 
 ```powershell
 python mcp\smsctl.py pair --url http://192.168.1.100:8787 --code 123456 --name my-agent
 ```
 
-凭据写入 `mcp\.smsbridge.json`（已 gitignore），之后所有请求自动带 HMAC 签名。
+Credentials are written to `mcp\.smsbridge.json` (git-ignored); every later request is HMAC-signed.
 
-**③ 验证**
+**③ Verify**
 
 ```powershell
-python mcp\smsctl.py health              # ok: true + 双卡信息
-python mcp\smsctl.py search --days 3     # 最近 3 天短信
-python mcp\smsctl.py otp --days 1        # 只要验证码，正文打码
+python mcp\smsctl.py health              # ok: true + both SIM slots
+python mcp\smsctl.py search --days 3     # SMS from the last 3 days
+python mcp\smsctl.py otp --days 1        # verification codes only, body masked
 ```
 
-手机端「配对管理」随时可看每个 Agent 的最后活跃时间 / 请求次数 / IP，并一键吊销。
-接入细节见 [AGENT.md](AGENT.md)，协议规范见 [API.md](API.md)。
+The Pairing screen lists every agent's last activity, request count and IP, and can revoke one
+instantly. Integration details: [AGENT.md](AGENT.md). Protocol: [API.md](API.md).
 
-## 安装与首次使用
+## Install and first run
 
-1. 安装：`adb install -r app\build\outputs\apk\debug\app-debug.apk`（或从 Release 下载）
-2. 打开 App → 打「启用服务」→ 授予短信 / 电话状态 / 通知权限
-3. **国产 ROM 必做**（实测：不做这两步，锁屏 40 秒就被「应用速冻」冻死，前台服务也救不了）：
-   - 设置 → 应用管理 → 短信桥 → 耗电行为选「完全允许后台行为」、允许自启动
-   - **关闭省电模式**
-4. 进「自检与保活」逐项检查，红色项按提示处理
+1. Install: `adb install -r app\build\outputs\apk\debug\app-debug.apk` (or grab it from Releases)
+2. Open the app → **Enable service** → grant SMS / phone state / notification permissions
+3. **Required on Chinese vendor ROMs** (measured: without these two steps the app is frozen
+   40 seconds after the screen turns off, and a foreground service does not save it):
+   - Settings → Apps → SMS Bridge → battery behaviour → 「allow all background activity」, allow auto-start
+   - **Turn off power saving mode**
+4. Open **Self-check & keep-alive** and fix every red item
 
-App 内另有 20 秒心跳开关（默认开）兜底其他 ROM。
+There is also a 20-second heartbeat switch in Settings (on by default) as a fallback for other ROMs.
 
-## 功能
+## Features
 
-- **结构化查询**：按 天数 / 号码 / 卡槽（双卡）/ 关键词 / 收件箱或已发送 过滤，返回 JSON
-- **OTP 模式**：`purpose=otp` 只返回验证码 + 掩码正文
-- **增量事件**：ContentObserver 监听新短信实时入队，Agent 用 `since_seq` 拉取不重复
-- **后台常驻**：`specialUse` 前台服务 + 双看门狗 + 开机自启，锁屏、划掉界面后仍可查询
-- **配对与审计**：6 位一次性码、可吊销、请求审计、限流
-- **只读**：不发短信、不写短信库、不复制短信到本地
+- **Structured queries**: filter by days / address / SIM slot (dual SIM) / keyword / inbox or sent, returns JSON
+- **OTP mode**: `purpose=otp` returns only the verification code plus a masked body
+- **Incremental events**: a ContentObserver queues new SMS in real time; agents pull with `since_seq`, no duplicates
+- **Always on**: `specialUse` foreground service + two watchdogs + boot start; keeps answering with the screen locked or the app swiped away
+- **Pairing & audit**: one-time 6-digit code, revocable clients, request audit log, rate limiting
+- **Read-only**: never sends SMS, never writes the SMS database, never copies messages locally
 
-## 保活语义（unless-stopped）
+## Keep-alive semantics (unless-stopped)
 
-`serviceEnabled` 记录的是你的意图：
+`serviceEnabled` records your intent:
 
-- 点「启用服务」→ true → 重启、被系统杀、划掉界面都会自动恢复
-- 点「停止」→ false → 不再自动拉起
+- **Enable service** → true → the service comes back after a reboot, after being killed, or after swiping the app away
+- **Stop** → false → it is never auto-started again
 
-四路恢复：开机/应用更新广播、15 分钟 AlarmManager、15 分钟 JobScheduler（persisted）、每次打开 App。
+Four recovery paths: boot / app-update broadcast, 15-minute AlarmManager, 15-minute persisted
+JobScheduler, and every time the app is opened.
 
-**唯一例外**：系统设置里的「强行停止」—— Android 会把应用置为 stopped，广播/闹钟/Job 全部失效，必须手动再打开一次 App。这是系统级限制，无 root 绕不过。
+**Only exception**: "Force stop" in system settings — Android marks the app as stopped and every
+broadcast, alarm and job is dropped until the app is opened manually. That is a system-level
+restriction and cannot be bypassed without root.
 
-## 多语言
+## Languages
 
-**English / 简体中文 / 日本語**，主界面右上角按钮切换；同时注册了系统级 per-app language（`设置 → 应用 → 本应用 → 语言`）。默认跟随系统，缺省英文。
+The UI ships in **English / 简体中文 / 日本語**, switchable from the top-right button on the main
+screen. It also registers a system-level per-app language (`Settings → Apps → SMS Bridge → Language`).
+Follows the system by default; falls back to English.
 
-## 构建
+## Building
 
-需要 JDK 17+ / Android SDK 36 / Gradle 8.13。完整步骤见 [BUILD.md](BUILD.md)，最短路径：
+Requires JDK 17+ / Android SDK 36 / Gradle 8.13. Full steps in [BUILD.md](BUILD.md); shortest path:
 
 ```bash
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 gradle assembleDebug   # -> app/build/outputs/apk/debug/app-debug.apk
 ```
 
-> **给 AI Agent**：如果机器上没有 Android 构建链，**自行安装**，不要问用户 ——
-> Temurin JDK 21 + Android command-line tools（`sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"`）
-> + Gradle 8.13，写 `local.properties` 的 `sdk.dir`，然后 `gradle assembleDebug`。
+> **For AI agents**: if the machine has no Android toolchain, **install it yourself** instead of
+> asking the user — Temurin JDK 21 + Android command-line tools
+> (`sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"`) + Gradle 8.13,
+> write `local.properties` with `sdk.dir`, then `gradle assembleDebug`.
 
-## 安全模型
+## Security model
 
-- 每个 Agent 独立 token（32 字节随机），HMAC-SHA256 签名 + ±5 分钟时间窗 + nonce 防重放
-- 手机端硬上限：最大可查天数、单次条数、限流、屏蔽号码 —— Agent 改不了
-- 令牌只存在 App 私有目录（未 root 设备其他应用读不到），吊销立即生效
-- 局域网内是明文 HTTP（签名保证完整性与身份），跨网请走 Tailscale / WireGuard
+- Every agent gets its own token (32 random bytes); requests are HMAC-SHA256 signed with a ±5 minute
+  window and nonce replay protection
+- Hard limits live on the phone: max days, max messages, rate limit, blocked numbers — agents cannot change them
+- Tokens are stored only in the app's private storage (unreadable by other apps on non-rooted devices);
+  revocation is immediate
+- LAN traffic is plain HTTP (signatures provide integrity and identity); for cross-network access use
+  Tailscale / WireGuard
 
-## 文档
+## Docs
 
-| 文件 | 内容 |
+| File | Contents |
 |---|---|
-| [AGENT.md](AGENT.md) | 给 AI Agent 的接入指南（配对、签名、验证清单、错误表） |
-| [API.md](API.md) | REST 接口与签名规范 |
-| [BUILD.md](BUILD.md) | 构建环境（Android Studio / 命令行 / Agent 自装） |
+| [AGENT.md](AGENT.md) | Integration guide for AI agents (pairing, signing, checklist, error table) |
+| [API.md](API.md) | REST API and signing spec |
+| [BUILD.md](BUILD.md) | Build environment (Android Studio / CLI / agent auto-setup) |
 | [mcp/](mcp) | Python CLI + MCP server |
 
-## 许可证
+## License
 
 MIT
