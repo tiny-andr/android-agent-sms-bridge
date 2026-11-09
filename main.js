@@ -194,11 +194,18 @@ function send(channel, payload) {
 // ---------------------------------------------------------------------- tray
 
 function trayImage() {
-  const png = path.join(__dirname, 'assets', 'tray.png');
-  if (fs.existsSync(png)) {
-    const img = nativeImage.createFromPath(png);
-    return img.resize({ width: 16, height: 16 });
+  // An .ico carries the sizes Windows asks for (16/20/24/32) and stays crisp at
+  // any DPI; the PNG is a fallback, and the app icon a last resort so the tray
+  // never ends up as an empty square.
+  const candidates = ['tray.ico', 'tray.png', 'icon.png'];
+  for (const name of candidates) {
+    const file = path.join(__dirname, 'assets', name);
+    if (!fs.existsSync(file)) continue;
+    const img = nativeImage.createFromPath(file);
+    if (img.isEmpty()) continue;
+    return name.endsWith('.ico') ? img : img.resize({ width: 16, height: 16 });
   }
+  console.warn('[tray] no icon file found next to', __dirname);
   return nativeImage.createEmpty();
 }
 

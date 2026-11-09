@@ -23,10 +23,11 @@
     "productName": "Windows SMS Bridge",
     "copyright": "MIT licensed",
     "directories": {
-      "output": "release",
+      "output": "dist",
       "buildResources": "assets"
     },
     "files": [
+      "assets/**/*",
       "main.js",
       "preload.js",
       "src/**/*",

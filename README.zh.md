@@ -72,8 +72,8 @@
 ```bash
 npm install
 npm start            # 直接从源码运行
-npm run pack         # 绿色版（免安装文件夹），输出到 dist/
-npm run dist         # 安装包 + 绿色压缩包，输出到 release/
+npm run pack         # 绿色版文件夹，输出到 dist/Windows SMS Bridge-win32-x64/
+npm run dist         # 安装包 + 绿色压缩包，输出到 dist/
 npm run icons        # 重新生成图标（Python + Pillow）
 ```
 

@@ -72,8 +72,8 @@ Requires Node.js 18+.
 ```bash
 npm install
 npm start            # run from source
-npm run pack         # portable folder, dist/
-npm run dist         # installer + portable zip, release/
+npm run pack         # portable folder, dist/Windows SMS Bridge-win32-x64/
+npm run dist         # installer + portable zip, dist/
 npm run icons        # regenerate the app icons (Python + Pillow)
 ```
 

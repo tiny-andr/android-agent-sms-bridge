@@ -72,8 +72,8 @@ Node.js 18 以降が必要です。
 ```bash
 npm install
 npm start            # ソースから起動
-npm run pack         # ポータブル版（dist/）
-npm run dist         # インストーラー + ポータブル zip（release/）
+npm run pack         # ポータブル版フォルダ（dist/Windows SMS Bridge-win32-x64/）
+npm run dist         # インストーラー + ポータブル zip（dist/）
 npm run icons        # アイコンを再生成（Python + Pillow）
 ```
 
