@@ -1,6 +1,11 @@
 # SmsBridge API
 
-Base URL: `http://<phone-ip>:8787`
+Base URL: `https://<phone-ip>:8787`
+
+Transport is **TLS with a self-signed certificate**. Clients must pin it:
+[`mcp/smsbridge-cert.pem`](mcp/smsbridge-cert.pem) is that certificate (SHA-256
+fingerprint is shown on the phone's pairing screen). The server does not speak
+plain HTTP at all.
 
 ## 鉴权
 

@@ -203,7 +203,7 @@ class BridgeService : Service() {
             s.start(NanoHTTPD_SOCKET_READ_TIMEOUT, true)
             server = s
             currentPort = port
-            Log.i(TAG, "HTTP listening on 0.0.0.0:$port")
+            Log.i(TAG, "HTTPS listening on 0.0.0.0:$port")
         } catch (t: Throwable) {
             Log.e(TAG, "cannot bind port $port", t)
             server = null

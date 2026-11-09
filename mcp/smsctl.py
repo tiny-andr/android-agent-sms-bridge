@@ -2,7 +2,7 @@
 """smsctl — command line client for the SmsBridge android app.
 
 Examples:
-    python smsctl.py pair --url http://192.168.1.100:8787 --code 123456 --name my-agent
+    python smsctl.py pair --url https://192.168.1.100:8787 --code 123456 --name my-agent
     python smsctl.py health
     python smsctl.py search --days 3 --address 10086 --limit 20
     python smsctl.py otp --address 10086 --days 1
@@ -100,7 +100,7 @@ def main() -> int:
     try:
         if args.cmd == "pair":
             if not args.url:
-                print("ERROR: --url is required, e.g. --url http://192.168.1.100:8787",
+                print("ERROR: --url is required, e.g. --url https://192.168.1.100:8787",
                       file=sys.stderr)
                 return 2
             creds = pair(args.url, args.code, args.name)

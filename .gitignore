@@ -9,6 +9,10 @@ local.properties
 *.apk
 *.aab
 
+# TLS private material — never commit, regenerate with tools/gen-cert.ps1
+keystore/
+app/src/main/assets/server.p12
+
 # Agent credentials (contains the pairing token) — never commit
 mcp/.smsbridge.json
 

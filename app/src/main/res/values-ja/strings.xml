@@ -37,6 +37,7 @@
     <string name="pair_never">未使用</string>
     <string name="pair_revoked_suffix">（無効）</string>
     <string name="pair_new_agent">新しいエージェントをペアリングしました</string>
+    <string name="pair_cert_fingerprint">証明書 SHA-256（エージェント側で固定）</string>
 
     <string name="settings_title">設定</string>
     <string name="settings_port">待受ポート</string>

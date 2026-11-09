@@ -37,6 +37,7 @@
     <string name="pair_never">never</string>
     <string name="pair_revoked_suffix"> (revoked)</string>
     <string name="pair_new_agent">New agent paired</string>
+    <string name="pair_cert_fingerprint">Certificate SHA-256 (pin this on the agent)</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_port">Listen port</string>

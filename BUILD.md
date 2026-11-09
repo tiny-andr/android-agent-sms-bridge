@@ -15,6 +15,19 @@ Verified combo: **AGP 8.13.0 · Kotlin 2.1.21 · Gradle 8.13 · compileSdk/targe
 Install [Android Studio](https://developer.android.com/studio), open this folder, let it
 download the SDK, then **Build → Build APK(s)**.
 
+## TLS certificate (required before building)
+
+The app serves HTTPS and needs `app/src/main/assets/server.p12`. That file is
+git-ignored (it contains the private key), so generate it once:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\gen-cert.ps1
+```
+
+This writes `keystore/server.p12`, copies it into the app assets, and exports
+`mcp/smsbridge-cert.pem` — the certificate that agents pin. If you regenerate the
+certificate later, every agent must take the new PEM.
+
 ## Command line
 
 1. **JDK 17+** — e.g. [Temurin 21](https://adoptium.net/temurin/releases/). Set `JAVA_HOME`.

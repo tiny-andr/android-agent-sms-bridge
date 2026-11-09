@@ -37,6 +37,7 @@
     <string name="pair_never">从未</string>
     <string name="pair_revoked_suffix">（已吊销）</string>
     <string name="pair_new_agent">新 Agent 已配对</string>
+    <string name="pair_cert_fingerprint">证书指纹 SHA-256（Agent 端固定此值）</string>
 
     <string name="settings_title">设置</string>
     <string name="settings_port">监听端口</string>

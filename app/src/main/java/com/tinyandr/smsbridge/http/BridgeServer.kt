@@ -20,6 +20,12 @@ class BridgeServer(private val ctx: Context, port: Int) : NanoHTTPD(port) {
 
     private val startedAt = System.currentTimeMillis()
 
+    init {
+        // TLS is mandatory: the API carries SMS bodies and pairing tokens.
+        val sc = TlsServer.sslContext(ctx)
+        makeSecure(sc.serverSocketFactory, null)
+    }
+
     override fun serve(session: IHTTPSession): Response {
         val method = session.method.name
         val path = session.uri ?: "/"

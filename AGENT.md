@@ -11,12 +11,12 @@ The user must do this on the phone (you cannot do it for them):
 2. Go to **Pairing** → note the **6-digit code** (valid 5 minutes, one-time)
 3. Tell you the **phone IP** shown on the main screen (e.g. `192.168.1.100`)
 
-You need network reachability from your machine to `http://<phone-ip>:8787`.
+You need network reachability from your machine to `https://<phone-ip>:8787`.
 
 ## 1. Pair once
 
 ```bash
-python mcp/smsctl.py pair --url http://<phone-ip>:8787 --code <code> --name <your-agent-name>
+python mcp/smsctl.py pair --url https://<phone-ip>:8787 --code <code> --name <your-agent-name>
 ```
 
 Credentials land in `mcp/.smsbridge.json` (git-ignored). By hand:
@@ -29,6 +29,17 @@ POST /v1/pair
 ```
 
 The token is shown **once**. Never log it, never commit it.
+
+### HTTPS only — pin the certificate
+
+The phone does not speak plain HTTP. It presents a self-signed certificate and
+this repo ships it as [`mcp/smsbridge-cert.pem`](mcp/smsbridge-cert.pem). The
+client must pin **that file** (not the system CA store); `smsbridge_client.py`
+already does. If the PEM is missing, copy it next to the script or point
+`SMSBRIDGE_CERT` at it.
+
+The SHA-256 fingerprint is also printed on the phone's pairing screen — compare
+it if you want to confirm the certificate really came from that device.
 
 ## 2. Sign every request
 

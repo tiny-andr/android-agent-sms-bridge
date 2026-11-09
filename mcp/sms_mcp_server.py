@@ -2,7 +2,7 @@
 """MCP server exposing a paired SmsBridge phone to any MCP capable agent.
 
 Run:  python sms_mcp_server.py
-Pair first with:  python smsctl.py pair --url http://192.168.1.100:8787 --code 123456
+Pair first with:  python smsctl.py pair --url https://192.168.1.100:8787 --code 123456
 """
 
 from __future__ import annotations

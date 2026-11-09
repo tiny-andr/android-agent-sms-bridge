@@ -13,6 +13,7 @@ import com.tinyandr.smsbridge.SmsBridge
 import com.tinyandr.smsbridge.data.PairedClient
 import com.tinyandr.smsbridge.databinding.ActivityPairBinding
 import com.tinyandr.smsbridge.databinding.ItemClientBinding
+import com.tinyandr.smsbridge.http.TlsServer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,6 +61,8 @@ class PairActivity : AppCompatActivity() {
             SmsBridge.pairCodes.generate()
             updateCode()
         }
+        b.tvFingerprint.text =
+            "${getString(R.string.pair_cert_fingerprint)}\n${TlsServer.prettyFingerprint(this)}"
         SmsBridge.pairCodes.generate()
     }
 

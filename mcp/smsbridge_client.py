@@ -13,6 +13,7 @@ import json
 import os
 import secrets
 import time
+import ssl
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -26,9 +27,39 @@ DEFAULT_CONFIG = Path(os.environ.get(
 ))
 DEFAULT_URL = os.environ.get("SMSBRIDGE_URL", "")
 
+# The phone serves HTTPS with a self-signed certificate. We do not trust the
+# system CA store, we trust exactly this one file (certificate pinning).
+CERT_FILE = Path(os.environ.get(
+    "SMSBRIDGE_CERT",
+    str(Path(__file__).resolve().parent / "smsbridge-cert.pem"),
+))
+
 # The phone is on the LAN. Never route it through a system proxy: urllib would
 # pick up HTTP_PROXY and a local proxy (Clash etc.) answers 502 for LAN hosts.
-_NO_PROXY_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+_opener: urllib.request.OpenerDirector | None = None
+
+
+def _ssl_context() -> ssl.SSLContext:
+    if not CERT_FILE.exists():
+        raise SmsBridgeError(
+            f"missing pinned certificate: {CERT_FILE}. "
+            "Copy smsbridge-cert.pem next to this script or set SMSBRIDGE_CERT."
+        )
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False  # the phone IP changes; we pin the certificate instead
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    ctx.load_verify_locations(cafile=str(CERT_FILE))
+    return ctx
+
+
+def _get_opener() -> urllib.request.OpenerDirector:
+    global _opener
+    if _opener is None:
+        _opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}),
+            urllib.request.HTTPSHandler(context=_ssl_context()),
+        )
+    return _opener
 
 
 class SmsBridgeError(RuntimeError):
@@ -81,7 +112,7 @@ def _http(method: str, url: str, headers: dict[str, str], body: bytes | None, ti
     for k, v in headers.items():
         req.add_header(k, v)
     try:
-        with _NO_PROXY_OPENER.open(req, timeout=timeout) as resp:
+        with _get_opener().open(req, timeout=timeout) as resp:
             raw = resp.read()
     except urllib.error.HTTPError as e:
         raw = e.read()

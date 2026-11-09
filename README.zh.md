@@ -19,13 +19,13 @@
 
 **① 手机端** —— 打开 App → 启用服务 → 进「配对管理」
 
-- 主界面显示接口地址，例如 `http://192.168.1.100:8787`
+- 主界面显示接口地址，例如 `https://192.168.1.100:8787`
 - 配对页显示 6 位码（**5 分钟有效、一次性**）
 
 **② Agent 端配对**（只做一次）
 
 ```powershell
-python mcp\smsctl.py pair --url http://192.168.1.100:8787 --code 123456 --name my-agent
+python mcp\smsctl.py pair --url https://192.168.1.100:8787 --code 123456 --name my-agent
 ```
 
 凭据写入 `mcp\.smsbridge.json`（已 gitignore），之后所有请求自动带 HMAC 签名。
@@ -91,10 +91,13 @@ gradle assembleDebug   # -> app/build/outputs/apk/debug/app-debug.apk
 
 ## 安全模型
 
+- **传输层是 TLS**：App 用自签证书提供 HTTPS，Agent 端固定 `mcp/smsbridge-cert.pem`（不信任系统 CA）。
+  同一 WiFi 下的设备抓包也读不到短信正文和配对 token。
+  已知局限：私钥打包在 APK 内，能反编译 APK 的人仍可解密 —— 这是自托管工具换取零配置 HTTPS 的取舍。
 - 每个 Agent 独立 token（32 字节随机），HMAC-SHA256 签名 + ±5 分钟时间窗 + nonce 防重放
 - 手机端硬上限：最大可查天数、单次条数、限流、屏蔽号码 —— Agent 改不了
 - 令牌只存在 App 私有目录（未 root 设备其他应用读不到），吊销立即生效
-- 局域网内是明文 HTTP（签名保证完整性与身份），跨网请走 Tailscale / WireGuard
+- 跨网络访问仍建议走 Tailscale / WireGuard
 
 ## 文档
 

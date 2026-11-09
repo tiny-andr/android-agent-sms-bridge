@@ -21,13 +21,13 @@ touched when a request arrives — there is no polling loop.
 
 **① On the phone** — open the app → **Enable service** → open **Pairing**
 
-- the main screen shows the endpoint, e.g. `http://192.168.1.100:8787`
+- the main screen shows the endpoint, e.g. `https://192.168.1.100:8787`
 - the pairing screen shows a 6-digit code (**valid 5 minutes, one-time**)
 
 **② On the agent side** — pair once
 
 ```powershell
-python mcp\smsctl.py pair --url http://192.168.1.100:8787 --code 123456 --name my-agent
+python mcp\smsctl.py pair --url https://192.168.1.100:8787 --code 123456 --name my-agent
 ```
 
 Credentials are written to `mcp\.smsbridge.json` (git-ignored); every later request is HMAC-signed.
@@ -100,13 +100,17 @@ gradle assembleDebug   # -> app/build/outputs/apk/debug/app-debug.apk
 
 ## Security model
 
+- **Transport is TLS.** The app serves HTTPS with a self-signed certificate; the agent pins
+  `mcp/smsbridge-cert.pem` instead of trusting the system CA store. A device on the same Wi-Fi cannot
+  read SMS bodies or pairing tokens from a packet capture.
+  Known limit: the private key ships inside the APK, so someone who also decompiles the APK could
+  decrypt. That trade-off buys zero-config HTTPS for a self-hosted tool.
 - Every agent gets its own token (32 random bytes); requests are HMAC-SHA256 signed with a ±5 minute
   window and nonce replay protection
 - Hard limits live on the phone: max days, max messages, rate limit, blocked numbers — agents cannot change them
 - Tokens are stored only in the app's private storage (unreadable by other apps on non-rooted devices);
   revocation is immediate
-- LAN traffic is plain HTTP (signatures provide integrity and identity); for cross-network access use
-  Tailscale / WireGuard
+- For cross-network access still prefer Tailscale / WireGuard
 
 ## Docs
 
