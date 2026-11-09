@@ -53,6 +53,22 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    // The TLS keystore is git-ignored (it holds the private key). Without this
+    // check the build would succeed and the app would crash on service start.
+    tasks.register("checkTlsCertificate") {
+        doFirst {
+            val p12 = file("src/main/assets/server.p12")
+            if (!p12.exists()) {
+                throw GradleException(
+                    "Missing app/src/main/assets/server.p12.\n" +
+                        "Run: python tools/gen_cert.py   (or tools\\gen-cert.ps1 on Windows)"
+                )
+            }
+        }
+    }
+
+    tasks.named("preBuild") { dependsOn("checkTlsCertificate") }
 }
 
 dependencies {

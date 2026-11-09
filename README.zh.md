@@ -82,7 +82,8 @@ App 内另有 20 秒心跳开关（默认开）兜底其他 ROM。
 
 ```bash
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
-gradle assembleDebug   # -> app/build/outputs/apk/debug/app-debug.apk
+python tools/gen_cert.py   # 生成 TLS 证书，每次 clone 跑一次
+gradle assembleDebug       # -> app/build/outputs/apk/debug/app-debug.apk
 ```
 
 > **给 AI Agent**：如果机器上没有 Android 构建链，**自行安装**，不要问用户 ——

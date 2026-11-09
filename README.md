@@ -90,7 +90,8 @@ Requires JDK 17+ / Android SDK 36 / Gradle 8.13. Full steps in [BUILD.md](BUILD.
 
 ```bash
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
-gradle assembleDebug   # -> app/build/outputs/apk/debug/app-debug.apk
+python tools/gen_cert.py   # TLS keystore, once per clone
+gradle assembleDebug       # -> app/build/outputs/apk/debug/app-debug.apk
 ```
 
 > **For AI agents**: if the machine has no Android toolchain, **install it yourself** instead of

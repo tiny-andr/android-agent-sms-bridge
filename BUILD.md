@@ -17,16 +17,28 @@ download the SDK, then **Build → Build APK(s)**.
 
 ## TLS certificate (required before building)
 
-The app serves HTTPS and needs `app/src/main/assets/server.p12`. That file is
-git-ignored (it contains the private key), so generate it once:
+The app serves HTTPS and needs `app/src/main/assets/server.p12`. It holds a
+private key, so it is git-ignored. Generate it once after cloning:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File tools\gen-cert.ps1
+```bash
+python tools/gen_cert.py
+# Windows alternative:
+# powershell -ExecutionPolicy Bypass -File tools\gen-cert.ps1
 ```
 
 This writes `keystore/server.p12`, copies it into the app assets, and exports
-`mcp/smsbridge-cert.pem` — the certificate that agents pin. If you regenerate the
-certificate later, every agent must take the new PEM.
+`mcp/smsbridge-cert.pem`.
+
+**Why it is not in the repo:** committing the private key would let anyone who
+reads the repo decrypt captured traffic, which defeats TLS entirely.
+
+**What this means for your build:** the `mcp/smsbridge-cert.pem` in the repo
+belongs to the official release APK. `gen_cert.py` overwrites it with **your**
+certificate — that is correct, your agents must pin your PEM, not the official
+one.
+
+The build fails with a clear message if the keystore is missing, so you cannot
+accidentally ship an app that crashes on service start.
 
 ## Command line
 

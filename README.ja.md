@@ -91,7 +91,8 @@ JDK 17+ / Android SDK 36 / Gradle 8.13 が必要です。詳細は [BUILD.md](BU
 
 ```bash
 echo "sdk.dir=/path/to/Android/Sdk" > local.properties
-gradle assembleDebug   # -> app/build/outputs/apk/debug/app-debug.apk
+python tools/gen_cert.py   # TLS 証明書の生成（clone ごとに 1 回）
+gradle assembleDebug       # -> app/build/outputs/apk/debug/app-debug.apk
 ```
 
 > **AI エージェントへ**：マシンに Android のビルド環境がない場合は、ユーザーに聞かずに
