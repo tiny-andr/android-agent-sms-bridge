@@ -220,8 +220,18 @@ class Store {
         added++;
       } else {
         const prev = bucket[i];
-        if (prev.body !== row.body || prev.read !== row.read) {
-          bucket[i] = { ...prev, body: row.body, read: row.read };
+        if (prev.body !== row.body || prev.read !== row.read
+            || prev.simNumber !== row.simNumber || prev.carrier !== row.carrier
+            || prev.slot !== row.slot || prev.subId !== row.subId) {
+          bucket[i] = {
+            ...prev,
+            body: row.body,
+            read: row.read,
+            simNumber: row.simNumber,
+            slot: row.slot,
+            subId: row.subId,
+            carrier: row.carrier,
+          };
           updated++;
         }
       }

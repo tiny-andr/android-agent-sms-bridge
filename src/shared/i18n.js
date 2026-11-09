@@ -31,6 +31,11 @@
     '{n} 小时前同步': 'Synced {n} h ago',
     '{n} 天前同步': 'Synced {n} d ago',
     '未知号码': 'Unknown number',
+    '全部卡': 'All SIMs',
+    '卡{n}': 'SIM {n}',
+    '卡{n} · {tail}': 'SIM {n} · {tail}',
+    '尾号 {tail}': 'ending {tail}',
+    '{n} 张卡': '{n} SIMs',
 
     /* ── window chrome ──────────────────────────────────────────────── */
     'Windows SMS Bridge · 短信桥': 'Windows SMS Bridge',
@@ -310,6 +315,11 @@
     '{n} 小时前同步': '{n}時間前に同期',
     '{n} 天前同步': '{n}日前に同期',
     '未知号码': '不明な番号',
+    '全部卡': 'すべてのSIM',
+    '卡{n}': 'SIM {n}',
+    '卡{n} · {tail}': 'SIM {n} · {tail}',
+    '尾号 {tail}': '下4桁 {tail}',
+    '{n} 张卡': '{n} SIM',
 
     'Windows SMS Bridge · 短信桥': 'Windows SMS Bridge',
     '短信桥': 'SMS Bridge',

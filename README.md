@@ -32,6 +32,7 @@ You can pair several phones. Each one gets its own key and appears as a chip in 
 | | |
 |---|---|
 | Multiple phones | Each phone keeps its own key, battery level, carrier and last-sync time |
+| Dual SIM | Every message is tagged with the card that received it (SIM 1 · 2132); filter by card |
 | Manual sync | **Sync** in the device rail (`Ctrl+R`) — syncs the selected phone, or all of them |
 | Scheduled sync | Off / 1 / 5 / 15 / 30 / 60 minutes, quietly in the background |
 | Start with Windows | Single `Run` entry, optionally start hidden in the tray |
@@ -84,8 +85,8 @@ npm run icons        # regenerate the app icons (Python + Pillow)
 
 | Artefact | Use |
 |---|---|
-| `Windows-SMS-Bridge-Setup-1.0.1.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
-| `Windows SMS Bridge-1.0.1-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
+| `Windows-SMS-Bridge-Setup-1.1.0.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
+| `Windows SMS Bridge-1.1.0-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
 
 Both keep all data in `%APPDATA%\Windows SMS Bridge\`, so switching between them keeps your pairings.
 

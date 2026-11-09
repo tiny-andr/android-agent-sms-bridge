@@ -535,6 +535,7 @@ h1, h2, h3, p { margin: 0; }
   white-space: nowrap;
 }
 .chip.accent { background: rgba(125, 140, 255, 0.18); color: #cdd3ff; border-color: rgba(125, 140, 255, 0.28); }
+.chip.sim { background: rgba(125, 140, 255, 0.10); color: #c6ccff; border-color: rgba(125, 140, 255, 0.20); }
 .unread-dot {
   margin-left: auto;
   min-width: 18px; height: 18px;

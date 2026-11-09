@@ -28,6 +28,7 @@ function normalize(row) {
     slot: typeof row.slot === 'number' ? row.slot : -1,
     subId: row.sub_id ?? 0,
     carrier: row.carrier || '',
+    simNumber: row.sim_number || '',
     read: Boolean(row.read),
   };
 }

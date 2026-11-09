@@ -20,7 +20,7 @@ const state = {
   stats: { total: 0 },
   sync: {},
   app: {},
-  view: { mode: 'all', phoneId: null, query: '' },
+  view: { mode: 'all', phoneId: null, query: '', sim: null },
   selected: null,
   syncing: false,
   loading: true,
@@ -108,6 +108,75 @@ function avatarStyle() {
   return 'background: rgb(var(--tint) / 0.08);';
 }
 
+/* ------------------------------------------------------------------ sim ─── */
+
+/** Digits of a SIM number with the +86 country code removed. */
+const simDigits = (num) => String(num || '').replace(/\D/g, '').replace(/^86(?=1\d{10}$)/, '');
+const simTail = (num) => simDigits(num).slice(-4);
+
+/** 19973712132 → "199 7371 2132". */
+function fmtPhone(num) {
+  const d = simDigits(num);
+  return d.length === 11 ? `${d.slice(0, 3)} ${d.slice(3, 7)} ${d.slice(7)}` : d;
+}
+
+/**
+ * Stable grouping key for the receiving SIM: its own number when the phone
+ * reports one, otherwise the physical slot. Older cached rows only have the
+ * slot, so both forms coexist without breaking existing history.
+ */
+function simKeyOf(m) {
+  if (m && m.simNumber) return `num:${simDigits(m.simNumber)}`;
+  if (m && typeof m.slot === 'number' && m.slot >= 0) return `slot:${m.slot}`;
+  return '';
+}
+
+/** "卡1 · 2132" — slot plus the last four digits, or just "卡1" when unknown. */
+function simLabel(slot, number) {
+  const hasSlot = typeof slot === 'number' && slot >= 0;
+  const tail = simTail(number);
+  if (hasSlot && tail) return t('卡{n} · {tail}', { n: slot + 1, tail });
+  if (hasSlot) return t('卡{n}', { n: slot + 1 });
+  return tail ? t('尾号 {tail}', { tail }) : '';
+}
+
+function simLabelOf(m) {
+  return simLabel(m && m.slot, m && m.simNumber);
+}
+
+/** Every card of the selected phone, merged from its health snapshot and cache. */
+function simOptions() {
+  // A single paired phone IS the scope even when the "all devices" chip is
+  // active, otherwise its SIM filter would never appear.
+  const scopeId = state.view.phoneId || (state.phones.length === 1 ? state.phones[0].id : null);
+  const phone = state.phones.find((p) => p.id === scopeId);
+  const healthSims = (phone && phone.health && Array.isArray(phone.health.sims)) ? phone.health.sims : [];
+  const opts = new Map();
+  for (const s of healthSims) {
+    const key = s.number ? `num:${simDigits(s.number)}` : `slot:${s.slot}`;
+    opts.set(key, {
+      key, slot: s.slot, number: s.number || '', label: simLabel(s.slot, s.number), count: 0,
+    });
+  }
+  const mode = state.view.mode;
+  for (const m of state.messages) {
+    if (state.view.phoneId && m.phoneId !== state.view.phoneId) continue;
+    const key = simKeyOf(m);
+    if (!key) continue;
+    let o = opts.get(key);
+    if (!o) {
+      o = { key, slot: m.slot, number: m.simNumber || '', label: simLabelOf(m), count: 0 };
+      opts.set(key, o);
+    }
+    if (mode === 'inbox' && m.type !== 'inbox') continue;
+    if (mode === 'sent' && m.type !== 'sent') continue;
+    if (mode === 'unread' && !(m.type === 'inbox' && !m.read && !m.seen)) continue;
+    if (m.type !== 'draft') o.count++;
+  }
+  return [...opts.values()].filter((o) => o.slot >= 0).sort((a, b) => a.slot - b.slot);
+}
+
+
 function initials(addr) {
   const a = String(addr || '').trim();
   if (!a) return '?';
@@ -160,12 +229,14 @@ const ICONS = {
   unread: '<svg viewBox="0 0 18 18" class="ic"><circle cx="9" cy="9" r="6.6"/><circle cx="9" cy="9" r="2.4" fill="currentColor" stroke="none"/></svg>',
   sync: '<svg viewBox="0 0 18 18" class="ic"><path d="M14.8 7.4A6 6 0 0 0 4.2 5.8M3.2 10.6a6 6 0 0 0 10.6 1.6"/><path d="M15 3.6v3.8h-3.8M3 14.4v-3.8h3.8"/></svg>',
   trash: '<svg viewBox="0 0 18 18" class="ic"><path d="M3.6 5.2h10.8M7 5.2V3.8h4v1.4M4.8 5.2l.7 9.1a1.4 1.4 0 0 0 1.4 1.3h4.2a1.4 1.4 0 0 0 1.4-1.3l.7-9.1"/></svg>',
+  sim: '<svg viewBox="0 0 18 18" class="ic"><rect x="4.6" y="2.4" width="8.8" height="13.2" rx="1.8"/><path d="M7 5.8h4v3.2H7z"/></svg>',
 };
 
 /* --------------------------------------------------------------- derive ─── */
 
 function messageMatchesView(m) {
   if (state.view.phoneId && m.phoneId !== state.view.phoneId) return false;
+  if (state.view.sim && simKeyOf(m) !== state.view.sim) return false;
   if (state.view.mode === 'inbox' && m.type !== 'inbox') return false;
   if (state.view.mode === 'sent' && m.type !== 'sent') return false;
   if (state.view.mode === 'unread' && !(m.type === 'inbox' && !m.read && !m.seen)) return false;
@@ -204,6 +275,7 @@ function countBy(mode) {
   for (const m of state.messages) {
     if (m.type === 'draft') continue;
     if (state.view.phoneId && m.phoneId !== state.view.phoneId) continue;
+    if (state.view.sim && simKeyOf(m) !== state.view.sim) continue;
     if (mode === 'inbox' && m.type !== 'inbox') continue;
     if (mode === 'sent' && m.type !== 'sent') continue;
     if (mode === 'unread' && !(m.type === 'inbox' && !m.read && !m.seen)) continue;
@@ -227,6 +299,25 @@ function renderNav() {
       ${it.count ? `<span class="badge">${it.count > 999 ? '999+' : it.count}</span>` : ''}
     </button>`).join('');
 
+  // SIM filter: only meaningful once a single phone is selected and it has 2+
+  // cards, otherwise every message belongs to the same card anyway.
+  const simSection = $('#simSection');
+  const simNav = $('#navSims');
+  if (!simSection || !simNav) return;
+  const sims = (state.view.phoneId || state.phones.length === 1) ? simOptions() : [];
+  if (sims.length < 2) {
+    simSection.hidden = true;
+    if (state.view.sim) state.view.sim = null;
+    return;
+  }
+  if (state.view.sim && !sims.some((s) => s.key === state.view.sim)) state.view.sim = null;
+  simSection.hidden = false;
+  const rows = [{ key: '', label: t('全部卡'), count: countBy(state.view.mode) }, ...sims];
+  simNav.innerHTML = rows.map((s) => `
+    <button class="nav-item ${(state.view.sim || '') === s.key ? 'on' : ''}" data-sim="${esc(s.key)}">
+      ${ICONS.sim}<span>${esc(s.label)}</span>
+      ${s.count ? `<span class="badge">${s.count > 999 ? '999+' : s.count}</span>` : ''}
+    </button>`).join('');
 }
 
 function deviceStateDot(p) {
@@ -367,8 +458,13 @@ function renderList() {
     const dir = last.type === 'sent' ? t('我：') : '';
     // the device badge is only meaningful while browsing all devices
     const showPhone = phone && !state.view.phoneId && state.phones.length > 1;
+    const simKeys = new Set(c.messages.map(simKeyOf).filter(Boolean));
+    const simChip = state.view.sim ? '' : simKeys.size > 1
+      ? `<span class="chip sim">${t('{n} 张卡', { n: simKeys.size })}</span>`
+      : simKeys.size === 1 ? `<span class="chip sim">${esc(simLabelOf(last))}</span>` : '';
     const chips = [
       showPhone ? `<span class="chip">${esc(phone.name)}</span>` : '',
+      simChip,
       c.count > 1 ? `<span class="chip">${t('{n} 条', { n: c.count })}</span>` : '',
     ].filter(Boolean).join('');
     return `
@@ -413,7 +509,18 @@ function renderThread() {
   const bits = [];
   if (phone) bits.push(`<span class="chip">${esc(phone.name)}</span>`);
   if (last.carrier) bits.push(`<span class="chip">${esc(last.carrier)}</span>`);
-  if (typeof last.slot === 'number' && last.slot >= 0) bits.push(`<span class="chip">SIM ${last.slot + 1}</span>`);
+  const seenSims = [];
+  for (const m of conv.messages) {
+    const k = simKeyOf(m);
+    if (!k || seenSims.some((s) => s.key === k)) continue;
+    seenSims.push({ key: k, label: simLabelOf(m), number: m.simNumber || '' });
+  }
+  if (seenSims.length === 1) {
+    const num = fmtPhone(seenSims[0].number);
+    bits.push(`<span class="chip sim">${esc(seenSims[0].label)}${num ? ` · ${esc(num)}` : ''}</span>`);
+  } else if (seenSims.length > 1) {
+    bits.push(`<span class="chip sim">${t('{n} 张卡', { n: seenSims.length })}</span>`);
+  }
   bits.push(`<span class="metric">${esc(t('{n} 条 · 最后一条 {when}', { n: conv.count, when: fmtAgo(conv.last.date) }))}</span>`);
   $('#threadSub').innerHTML = bits.join('');
 
@@ -427,7 +534,8 @@ function renderThread() {
     }
     const bodyHtml = esc(String(m.body || '').replace(/\s+$/, '')).replace(/\n{3,}/g, '\n\n');
     const bubbleBody = bodyHtml || '<i style="opacity:.5">（空短信）</i>';
-    html += `<div class="bubble ${m.type === 'sent' ? 'out' : 'in'}"><span class="body-text" data-no-i18n>${bubbleBody}</span><span class="stamp">${esc(fmtClock(m.date))}${m.type === 'sent' ? t(' · 已发送') : ''}</span></div>`;
+    const card = seenSims.length > 1 ? `${esc(simLabelOf(m))} · ` : '';
+    html += `<div class="bubble ${m.type === 'sent' ? 'out' : 'in'}"><span class="body-text" data-no-i18n>${bubbleBody}</span><span class="stamp">${card}${esc(fmtClock(m.date))}${m.type === 'sent' ? t(' · 已发送') : ''}</span></div>`;
   }
   const scroller = $('#threadScroll');
   scroller.innerHTML = `<div class="bubbles">${html}</div>`;
@@ -1158,6 +1266,15 @@ function bindEvents() {
     renderAll();
   });
 
+  // SIM filter (only rendered when the selected phone has 2+ cards)
+  $('#navSims').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sim]');
+    if (!b) return;
+    state.view.sim = b.dataset.sim || null;
+    state.selected = null;
+    renderAll();
+  });
+
   // search
   const search = $('#searchInput');
   let t = null;
@@ -1183,6 +1300,7 @@ function bindEvents() {
       state.view.phoneId = state.view.phoneId === id ? null : id;
     }
     state.selected = null;
+    state.view.sim = null;
     renderAll();
     if (state.view.phoneId) window.sms.phoneHealth(state.view.phoneId).then(() => reload()).catch(() => {});
   });
