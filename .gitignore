@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.shots/
+.demo-data/
+*.log
+
+# local agent notes / scratch data
+.workbuddy/
+.tmp-*/
+__pycache__/
+
+# local agent notes / scratch data
+.workbuddy/
+.tmp-*/
+__pycache__/
