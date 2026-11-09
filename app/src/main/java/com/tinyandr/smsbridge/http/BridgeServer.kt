@@ -160,6 +160,7 @@ class BridgeServer(private val ctx: Context, port: Int) : NanoHTTPD(port) {
                     .put("slot", it.slot)
                     .put("sub_id", it.subId)
                     .put("carrier", it.carrier)
+                    .put("number", it.number)
             )
         }
         return json(
@@ -232,6 +233,7 @@ class BridgeServer(private val ctx: Context, port: Int) : NanoHTTPD(port) {
                 .put("slot", m.slot)
                 .put("sub_id", m.subId)
                 .put("carrier", m.carrier)
+                .put("sim_number", m.simNumber)
                 .put("read", m.read)
             if (otpMode) {
                 val hit = OtpExtractor.extract(m.body) ?: continue

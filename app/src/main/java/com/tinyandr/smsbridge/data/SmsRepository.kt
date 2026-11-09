@@ -15,6 +15,7 @@ data class SmsMessage(
     val subId: Int,
     val slot: Int,
     val carrier: String,
+    val simNumber: String,
     val read: Boolean
 ) {
     val isInbox: Boolean get() = type == Telephony.Sms.MESSAGE_TYPE_INBOX
@@ -36,7 +37,12 @@ data class SmsQuery(
 
 class SmsRepository(private val context: Context) {
 
-    data class SimInfo(val subId: Int, val slot: Int, val carrier: String)
+    data class SimInfo(
+        val subId: Int,
+        val slot: Int,
+        val carrier: String,
+        val number: String = ""
+    )
 
     @Volatile
     private var cachedSims: List<SimInfo> = emptyList()
@@ -52,7 +58,13 @@ class SmsRepository(private val context: Context) {
                 SimInfo(
                     subId = it.subscriptionId,
                     slot = it.simSlotIndex,
-                    carrier = it.carrierName?.toString() ?: ""
+                    carrier = it.carrierName?.toString() ?: "",
+                    number = try {
+                        it.number?.trim() ?: ""
+                    } catch (t: Throwable) {
+                        Log.w(TAG, "sim number unavailable: ${t.message}")
+                        ""
+                    }
                 )
             } ?: emptyList()
         } catch (t: Throwable) {
@@ -175,6 +187,7 @@ class SmsRepository(private val context: Context) {
                             subId = subId,
                             slot = sim?.slot ?: -1,
                             carrier = sim?.carrier ?: "",
+                            simNumber = sim?.number ?: "",
                             read = iRead >= 0 && c.getInt(iRead) == 1
                         )
                     )

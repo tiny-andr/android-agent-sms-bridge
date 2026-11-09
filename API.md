@@ -68,10 +68,12 @@ METHOD \n PATH \n RAW_QUERY_STRING \n TIMESTAMP \n NONCE
   "battery": 87, "charging": false, "uptime_s": 1234,
   "paired_clients": 1, "pending_events": 3, "latest_seq": 12,
   "server_time": 1762345678901,
-  "sims": [{"slot": 0, "sub_id": 1, "carrier": "中国电信"},
-           {"slot": 1, "sub_id": 2, "carrier": "中国电信"}]
+  "sims": [{"slot": 0, "sub_id": 1, "carrier": "中国电信", "number": "+8613800000000"},
+           {"slot": 1, "sub_id": 2, "carrier": "中国电信", "number": ""}]
 }
 ```
+
+`number` 是这张卡的本机号码，读自系统的 `SubscriptionInfo`。运营商没有把号码写进 SIM 卡时为空字符串（部分机型/号段），客户端应回退到 `slot` 分组，不要假设它一定有值。
 
 ### `GET /v1/sms`（签名）
 
@@ -106,6 +108,7 @@ METHOD \n PATH \n RAW_QUERY_STRING \n TIMESTAMP \n NONCE
       "slot": 0,
       "sub_id": 1,
       "carrier": "中国电信",
+      "sim_number": "+8613800000000",
       "read": true,
       "body": "【中国电信】您的验证码是 836291，5 分钟内有效。"
     }
@@ -119,7 +122,7 @@ METHOD \n PATH \n RAW_QUERY_STRING \n TIMESTAMP \n NONCE
 {
   "id": 12345, "address": "10086", "date": 1762345600000,
   "date_iso": "2026-11-04 22:46:40", "type": "inbox", "slot": 0,
-  "sub_id": 1, "carrier": "中国电信", "read": true,
+  "sub_id": 1, "carrier": "中国电信", "sim_number": "+8613800000000", "read": true,
   "otp": "836291",
   "matched_by": "验证码",
   "masked_body": "【中国电信】您的验证码是 836291，* 分钟内有效。"
