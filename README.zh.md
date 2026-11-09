@@ -1,4 +1,4 @@
-# Windows SMS Bridge · 短信桥
+# Windows SMS Bridge
 
 [English](README.md) | **简体中文** | [日本語](README.ja.md)
 
