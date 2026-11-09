@@ -68,6 +68,18 @@
     '可从已有的 .smsbridge.json 复制 base_url / client_id / token，凭据会用 Windows DPAPI 加密后保存在本机。':
       'You can copy base_url / client_id / token from an existing .smsbridge.json; the credentials are encrypted with Windows DPAPI and stored on this machine.',
     '启动失败：{msg}': 'Failed to start: {msg}',
+    '把这台电脑和手机连起来，短信会自动同步到本地。':
+      'Connect this computer to your phone — messages sync here automatically.',
+    '支持同时配对多台手机。': 'You can pair several phones at the same time.',
+    '手机安装 {app}，点「启用服务」并授予短信权限':
+      'Install {app} on the phone, tap “Enable service” and grant SMS permission',
+    '短信桥 (SmsBridge)': 'SMS Bridge (SmsBridge)',
+    '确保电脑与手机在 {wifi}，记下手机上显示的 IP':
+      'Make sure the PC and the phone are on the {wifi}, then note the IP shown on the phone',
+    '同一 Wi-Fi': 'same Wi-Fi',
+    '打开手机的 {pair} 页面，把 6 位配对码填进来':
+      'Open the {pair} screen on the phone and enter the 6-digit code',
+    '配对': 'Pairing',
     '自动': 'Auto',
     '已关闭': 'Off',
     '取消': 'Cancel',
@@ -142,8 +154,6 @@
     '配对码': 'Pairing code',
     '已有凭据': 'Existing credentials',
     '手机地址': 'Phone address',
-    '可从已有的 .smsbridge.json 复制 base_url / client_id / token。凭据会用 Windows DPAPI 加密后保存在本机。':
-      'Copy base_url / client_id / token from an existing .smsbridge.json. Credentials are encrypted with Windows DPAPI on this machine.',
     '测试连接': 'Test connection',
     '配对并同步': 'Pair & sync',
     '导入并同步': 'Import & sync',
@@ -333,6 +343,18 @@
     '可从已有的 .smsbridge.json 复制 base_url / client_id / token，凭据会用 Windows DPAPI 加密后保存在本机。':
       '既存の .smsbridge.json から base_url / client_id / token をコピーできます。認証情報は Windows DPAPI で暗号化してこの PC に保存されます。',
     '启动失败：{msg}': '起動に失敗しました: {msg}',
+    '把这台电脑和手机连起来，短信会自动同步到本地。':
+      'この PC とスマホをつなぐと、メッセージは自動でこの PC に同期されます。',
+    '支持同时配对多台手机。': '複数のスマホを同時にペアリングできます。',
+    '手机安装 {app}，点「启用服务」并授予短信权限':
+      'スマホに {app} をインストールし、「サービスを有効化」を押して SMS 権限を許可',
+    '短信桥 (SmsBridge)': 'SMS Bridge (SmsBridge)',
+    '确保电脑与手机在 {wifi}，记下手机上显示的 IP':
+      'PC とスマホが{wifi}にあることを確認し、スマホに表示される IP を控える',
+    '同一 Wi-Fi': '同じ Wi-Fi',
+    '打开手机的 {pair} 页面，把 6 位配对码填进来':
+      'スマホの{pair}画面を開き、6 桁のコードを入力',
+    '配对': 'ペアリング',
     '自动': '自動',
     '已关闭': 'オフ',
     '取消': 'キャンセル',
@@ -402,8 +424,6 @@
     '配对码': 'ペアリングコード',
     '已有凭据': '既存の認証情報',
     '手机地址': '端末アドレス',
-    '可从已有的 .smsbridge.json 复制 base_url / client_id / token。凭据会用 Windows DPAPI 加密后保存在本机。':
-      '既存の .smsbridge.json から base_url / client_id / token をコピーできます。認証情報は Windows DPAPI で暗号化して保存します。',
     '测试连接': '接続テスト',
     '配对并同步': 'ペアリングして同期',
     '导入并同步': '読み込んで同期',

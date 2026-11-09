@@ -11,6 +11,8 @@
     "start": "electron .",
     "pack": "npx @electron/packager . \"Windows SMS Bridge\" --platform=win32 --arch=x64 --out=dist --icon=assets/icon.ico --overwrite --app-version=1.0.0 --ignore=\"^/(dist|\\\\.shots|\\\\.demo-data|tools|\\\\.git)(/|$)\"",
     "icons": "python tools/make_icons.py",
+    "i18n:check": "node scripts/i18n-sweep.js",
+    "avatar:contrast": "node scripts/avatar-contrast.js",
     "dist": "electron-builder --win nsis zip"
   },
   "devDependencies": {

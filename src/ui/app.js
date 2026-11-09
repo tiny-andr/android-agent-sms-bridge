@@ -87,9 +87,9 @@ function fmtAgo(ms) {
 }
 
 function fmtRelative(ms) {
-  if (!ms) return '从未同步';
+  if (!ms) return t('从未同步');
   const diff = Date.now() - ms;
-  if (diff < 45000) return '刚刚同步';
+  if (diff < 45000) return t('刚刚同步');
   if (diff < 3600000) return t('{n} 分钟前同步', { n: Math.round(diff / 60000) });
   if (diff < 86400000) return t('{n} 小时前同步', { n: Math.round(diff / 3600000) });
   return t('{n} 天前同步', { n: Math.round(diff / 86400000) });
@@ -110,6 +110,7 @@ function avatarStyle(key) {
   const h2 = (h + 42) % 360;
   // Both stops share one lightness band (66%) so the initials read the same
   // anywhere on the tile; dark ink then clears 4.5:1 on every one of 360 hues.
+  // Sweep: npm run avatar:contrast (worst hue h=240 -> 4.82:1).
   return `background: linear-gradient(145deg, hsl(${h} 72% 66%), hsl(${h2} 68% 66%));`
     + 'color: var(--avatar-ink-dark); text-shadow: none;';
 }
@@ -508,7 +509,8 @@ let localizerStarted = false;
 function startLocalizer() {
   if (localizerStarted || typeof MutationObserver !== 'function') return;
   localizerStarted = true;
-  if (window.I18N.getLang() === 'zh') return;
+  // The observer must run even when the app boots in Chinese: a runtime switch
+  // to en/ja would otherwise never localise anything rendered afterwards.
   let queued = false;
   const observer = new MutationObserver(() => {
     if (queued) return;
@@ -676,6 +678,15 @@ function toast(message, kind = '') {
   }, kind === 'err' ? 4200 : 2400);
 }
 
+/** Hide and wipe the persistent toast (used when the language changes). */
+function clearToast() {
+  clearTimeout(toastTimer);
+  if (!toastEl) return;
+  toastEl.hidden = true;
+  toastEl.classList.remove('out');
+  toastEl.textContent = '';
+}
+
 /* ----------------------------------------------------------- phone modal ── */
 
 function openAddPhone(opts = {}) {
@@ -758,7 +769,7 @@ function openAddPhone(opts = {}) {
         const isCode = b.dataset.tab === 'code';
         codePane.style.display = isCode ? 'flex' : 'none';
         importPane.style.display = isCode ? 'none' : 'flex';
-        goBtn.textContent = isCode ? '配对并同步' : '导入并同步';
+        goBtn.textContent = isCode ? t('配对并同步') : t('导入并同步');
       });
 
       const code = card.querySelector('#pCode');
@@ -1120,6 +1131,9 @@ function applyLanguage() {
   rebuildModal();
   relocalizeDom(document.body);
   renderAll();
+  // a toast is a single persistent node, so its last text would otherwise stay
+  // in the previous language
+  clearToast();
 }
 
 async function reload() {
@@ -1370,13 +1384,13 @@ async function init() {
           <div>
             <h3 style="font-size:18px;font-weight:650;letter-spacing:.2px;">${t('欢迎使用 Windows SMS Bridge')}</h3>
             <p style="margin-top:8px;font-size:12.6px;color:var(--dim);line-height:1.9;">
-              把这台电脑和手机连起来，短信会自动同步到本地。<br />支持同时配对多台手机。
+              ${t('把这台电脑和手机连起来，短信会自动同步到本地。')}<br />${t('支持同时配对多台手机。')}
             </p>
           </div>
           <div class="steps">
-            <div class="step"><i>1</i><div>手机安装 <b>短信桥 (SmsBridge)</b>，点「启用服务」并授予短信权限</div></div>
-            <div class="step"><i>2</i><div>确保电脑与手机在 <b>同一 Wi-Fi</b>，记下手机上显示的 IP</div></div>
-            <div class="step"><i>3</i><div>打开手机的 <b>配对</b> 页面，把 6 位配对码填进来</div></div>
+            <div class="step"><i>1</i><div>${t('手机安装 {app}，点「启用服务」并授予短信权限', { app: `<b>${t('短信桥 (SmsBridge)')}</b>` })}</div></div>
+            <div class="step"><i>2</i><div>${t('确保电脑与手机在 {wifi}，记下手机上显示的 IP', { wifi: `<b>${t('同一 Wi-Fi')}</b>` })}</div></div>
+            <div class="step"><i>3</i><div>${t('打开手机的 {pair} 页面，把 6 位配对码填进来', { pair: `<b>${t('配对')}</b>` })}</div></div>
           </div>
           <div class="modal-actions" style="width:100%;justify-content:center;">
             <button class="btn ghost" data-close>${t('稍后再说')}</button>
@@ -1392,7 +1406,14 @@ async function init() {
   }
 }
 
+/** Fatal boot failure fallback. Also driven by scripts/i18n-sweep.js. */
+function renderCrash(err) {
+  const msg = err && err.message ? err.message : String(err);
+  document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:var(--text);">'
+    + `${esc(t('启动失败：{msg}', { msg }))}</div>`;
+}
+
 init().catch((err) => {
   console.error(err);
-  document.body.innerHTML = `<div style="padding:40px;font-family:sans-serif;color:var(--text);">${esc(t('启动失败：{msg}', { msg: err.message }))}</div>`;
+  renderCrash(err);
 });
