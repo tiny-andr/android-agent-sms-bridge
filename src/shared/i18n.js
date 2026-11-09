@@ -38,6 +38,8 @@
     '设备': 'Devices',
     '同步': 'Sync',
     '同步中': 'Syncing',
+    '同步中…': 'Syncing…',
+    '手机': 'Phone',
     '配对手机': 'Pair phone',
     '视图': 'Views',
     '当前设备': 'Current device',
@@ -50,6 +52,14 @@
       'Messages from the phone are on the left, the full thread on the right.',
     '所有内容只保存在这台电脑本地。': 'Everything stays on this computer.',
     '关闭': 'Close',
+    '最小化': 'Minimise',
+    '最大化': 'Maximise',
+    '关闭到托盘': 'Close to tray',
+    '配对新手机': 'Pair a new phone',
+    '切换主题': 'Switch theme',
+    '切换深浅主题': 'Switch light/dark theme',
+    '切换到米白主题': 'Switch to the paper theme',
+    '切换到深色主题': 'Switch to the dark theme',
     '自动': 'Auto',
     '已关闭': 'Off',
     '取消': 'Cancel',
@@ -234,6 +244,9 @@
     '退出': 'Quit',
     '已配对手机 · {n}': 'Paired phones · {n}',
     '还没有配对任何手机': 'No phone paired yet',
+    '先在手机上打开短信桥 App 并启用服务，然后点击右上角「配对手机」。':
+      'Open SMS Bridge on the phone, enable the service, then click “Pair phone” at the top right.',
+    '正在从 {name} 读取 · 已获取 {n} 条': 'Reading from {name} · {n} fetched',
     ' · 已同步': ' · synced',
     '新短信 · {addr}': 'New message · {addr}',
     '{n} 条新短信': '{n} new messages',
@@ -282,6 +295,8 @@
     '设备': '端末',
     '同步': '同期',
     '同步中': '同期中',
+    '同步中…': '同期中…',
+    '手机': 'スマホ',
     '配对手机': '端末をペアリング',
     '视图': 'ビュー',
     '当前设备': '現在の端末',
@@ -294,6 +309,14 @@
       '左側が端末のメッセージ、右側が会話全体です。',
     '所有内容只保存在这台电脑本地。': 'データはすべてこの PC 内に保存されます。',
     '关闭': '閉じる',
+    '最小化': '最小化',
+    '最大化': '最大化',
+    '关闭到托盘': 'トレイに閉じる',
+    '配对新手机': '新しい端末をペアリング',
+    '切换主题': 'テーマを切り替え',
+    '切换深浅主题': 'ライト／ダークを切り替え',
+    '切换到米白主题': 'ペーパーテーマに切り替え',
+    '切换到深色主题': 'ダークテーマに切り替え',
     '自动': '自動',
     '已关闭': 'オフ',
     '取消': 'キャンセル',
@@ -469,6 +492,9 @@
     '退出': '終了',
     '已配对手机 · {n}': 'ペアリング済み · {n}',
     '还没有配对任何手机': 'ペアリング済みの端末はありません',
+    '先在手机上打开短信桥 App 并启用服务，然后点击右上角「配对手机」。':
+      'スマホで SMS Bridge を開いてサービスを有効にし、右上の「端末をペアリング」を押してください。',
+    '正在从 {name} 读取 · 已获取 {n} 条': '{name} から読み込み中 · {n}件取得',
     ' · 已同步': ' · 同期済み',
     '新短信 · {addr}': '新着メッセージ · {addr}',
     '{n} 条新短信': '新着 {n}件',
@@ -494,6 +520,27 @@
     '连接被重置：手机端可能被系统冻结': '接続がリセットされました。端末がアプリを凍結した可能性があります',
     '时间': '日時', '号码': '番号', '方向': '方向', '卡槽': 'スロット',
     '运营商': '通信事業者', '内容': '本文', '发': '送', '收': '受',
+  };
+
+  /**
+   * English singular forms. Chinese does not mark number, so one dictionary
+   * entry cannot serve n = 1; these variants are picked by t() whenever the
+   * caller passes n === 1 or m === 1. Values are functions when a sentence
+   * carries two independent counts (phones and messages).
+   */
+  const EN_ONE = {
+    '{n} 台手机': '{n} phone',
+    '{n} 条': '{n}',
+    '{n} 条新短信': '{n} new message',
+    '{n} 条 · 最后一条 {when}': (v) =>
+      `${v.n} ${v.n === 1 ? 'message' : 'messages'} · last ${v.when}`,
+    '{n} 台手机 · {m} 条短信': (v) =>
+      `${v.n} ${v.n === 1 ? 'phone' : 'phones'} · ${v.m} ${v.m === 1 ? 'message' : 'messages'}`,
+    '同步完成 · 新增 {n} 条短信': '{n} new message synced',
+    '已导出 {n} 条': 'Exported {n} message',
+    '已导出 {n} 条到 CSV': 'Exported {n} message to CSV',
+    '本地消息 {n} 条 · 数据目录 {dir}': '{n} local message · data folder {dir}',
+    '正在从 {name} 读取 · 已获取 {n} 条': 'Reading from {name} · {n} fetched',
   };
 
   let current = 'en';
@@ -523,7 +570,11 @@
   function t(key, vars) {
     if (current === 'zh') return fill(key, vars);
     const table = current === 'ja' ? JA : EN;
-    const text = table[key] != null ? table[key] : EN[key] != null ? EN[key] : key;
+    let text = table[key] != null ? table[key] : EN[key] != null ? EN[key] : key;
+    if (current === 'en' && vars && (vars.n === 1 || vars.m === 1)) {
+      const one = EN_ONE[key];
+      if (one != null) text = typeof one === 'function' ? one(vars) : one;
+    }
     return fill(text, vars);
   }
 
@@ -605,6 +656,14 @@
    * that carry copy. Centralised so every render path is covered without
    * sprinkling t() through the template strings.
    */
+  /**
+   * Source copy kept aside so the UI can switch language at runtime: a text
+   * node translated to English no longer contains the Chinese key, so it could
+   * never be re-translated to Japanese without remembering the original.
+   */
+  const sourceText = new WeakMap();
+  const sourceAttrs = new WeakMap();
+
   function localizeDom(root) {
     if (current === 'zh' || !root || typeof document === 'undefined') return;
     const filter = {
@@ -620,21 +679,59 @@
     while (node) { nodes.push(node); node = walker.nextNode(); }
     for (const n of nodes) {
       if (n.nodeType === 3) {
-        const v = n.nodeValue;
-        if (v && CJK.test(v)) {
-          const next = localizeText(v);
-          if (next !== v) n.nodeValue = next;
+        if (!sourceText.has(n)) {
+          const v = n.nodeValue;
+          if (v && CJK.test(v)) sourceText.set(n, v);
+        }
+        const src = sourceText.get(n);
+        if (src) {
+          const next = localizeText(src);
+          if (next !== n.nodeValue) n.nodeValue = next;
         }
       } else if (n.nodeType === 1) {
-        for (const attr of ATTRS) {
-          const val = n.getAttribute(attr);
-          if (val && CJK.test(val)) {
+        if (!sourceAttrs.has(n)) {
+          const bag = {};
+          for (const attr of ATTRS) {
+            const val = n.getAttribute(attr);
+            if (val && CJK.test(val)) bag[attr] = val;
+          }
+          if (Object.keys(bag).length) sourceAttrs.set(n, bag);
+        }
+        const bag = sourceAttrs.get(n);
+        if (bag) {
+          for (const [attr, val] of Object.entries(bag)) {
             const next = localizeText(val);
-            if (next !== val) n.setAttribute(attr, next);
+            if (next !== n.getAttribute(attr)) n.setAttribute(attr, next);
           }
         }
       }
     }
+  }
+
+  /**
+   * Restore every node to its Chinese source, then translate again — so a
+   * language switch works on the live DOM instead of needing a refresh.
+   */
+  function relocalizeDom(root) {
+    if (!root || typeof document === 'undefined') return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null);
+    const nodes = [];
+    let node = walker.nextNode();
+    while (node) { nodes.push(node); node = walker.nextNode(); }
+    for (const n of nodes) {
+      if (n.nodeType === 3) {
+        const src = sourceText.get(n);
+        if (src != null && n.nodeValue !== src) n.nodeValue = src;
+      } else if (n.nodeType === 1) {
+        const bag = sourceAttrs.get(n);
+        if (bag) {
+          for (const [attr, val] of Object.entries(bag)) {
+            if (n.getAttribute(attr) !== val) n.setAttribute(attr, val);
+          }
+        }
+      }
+    }
+    localizeDom(root);
   }
 
   function localize(html) {
@@ -655,5 +752,5 @@
     { id: 'ja', label: '日本語' },
   ];
 
-  return { t, localize, localizeText, localizeDom, setLang, getLang, resolveLang, normalize, LANGUAGES, EN, JA };
+  return { t, localize, localizeText, localizeDom, relocalizeDom, setLang, getLang, resolveLang, normalize, LANGUAGES, EN, JA };
 });

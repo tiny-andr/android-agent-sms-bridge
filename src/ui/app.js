@@ -7,7 +7,7 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-const { t, localizeText, localizeDom, setLang, resolveLang } = window.I18N;
+const { t, localizeText, localizeDom, relocalizeDom, setLang, resolveLang } = window.I18N;
 
 // provisional language until the stored setting arrives, so a zh system never
 // flashes translated chrome
@@ -104,11 +104,38 @@ function shortAddress(addr) {
 }
 
 /** Deterministic pastel-to-saturated gradient per address. */
+function hslToRgb(h, s, l) {
+  const f = (n) => {
+    const k = (n + h / 30) % 12;
+    return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return [f(0), f(8), f(4)];
+}
+
+function relLum([r, g, b]) {
+  const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/**
+ * The avatar fill is a two-stop gradient, so measure the midpoint where the
+ * initials actually sit and pick the ink that clears 4.5:1 for that hue.
+ * max(black, white) never falls below 4.58 on any backdrop, so one of the two
+ * always passes — pure black is required for the crossover hues.
+ */
+function avatarInk(h, h2) {
+  const a = hslToRgb(h, 0.72, 0.62);
+  const b = hslToRgb(h2, 0.68, 0.50);
+  const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+  return (relLum(mid) + 0.05) / 0.05 >= 4.5 ? 'var(--avatar-ink-dark)' : 'var(--avatar-ink-light)';
+}
+
 function avatarStyle(key) {
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
   const h2 = (h + 42) % 360;
-  return `background: linear-gradient(145deg, hsl(${h} 72% 62%), hsl(${h2} 68% 50%));`;
+  return `background: linear-gradient(145deg, hsl(${h} 72% 62%), hsl(${h2} 68% 50%));`
+    + `color: ${avatarInk(h, h2)}; text-shadow: none;`;
 }
 
 function initials(addr) {
@@ -145,7 +172,7 @@ function applyTheme(theme, { persist = false } = {}) {
   const icon = $('#themeIcon');
   if (icon) icon.innerHTML = next === 'dark' ? ICON_SUN : ICON_MOON;
   const btn = $('#btnTheme');
-  if (btn) btn.title = next === 'dark' ? '切换到米白主题' : '切换到深色主题';
+  if (btn) btn.title = next === 'dark' ? t('切换到米白主题') : t('切换到深色主题');
   if (persist) {
     state.settings = { ...state.settings, theme: next };
     window.sms.setSettings({ theme: next }).catch(() => {});
@@ -345,22 +372,26 @@ function renderList() {
   if (!state.phones.length) {
     listEl.innerHTML = '';
     emptyEl.hidden = false;
-    emptyEl.innerHTML = `<b style="color:#fff;display:block;margin-bottom:8px;font-size:13px;">还没有配对任何手机</b>
-      先在手机上打开短信桥 App 并启用服务，<br />然后点击左下角「配对新手机」。`;
+    emptyEl.innerHTML = `<b>${t('还没有配对任何手机')}</b>
+      ${t('先在手机上打开短信桥 App 并启用服务，然后点击右上角「配对手机」。')}`;
     return;
   }
   if (!convs.length) {
     listEl.innerHTML = '';
     emptyEl.hidden = false;
     emptyEl.innerHTML = state.view.query
-      ? '没有匹配的短信<br />换个关键词试试'
+      ? `${t('没有匹配的短信')}<br />${t('换个关键词试试')}`
       : state.messages.length
-        ? '这个视图下还没有短信'
-        : '还没有同步任何短信<br />点右上角同步按钮开始';
+        ? t('这个视图下还没有短信')
+        : `${t('还没有同步任何短信')}<br />${t('点上方同步按钮开始')}`;
     return;
   }
 
   emptyEl.hidden = true;
+  // roving tabindex: the list is one tab stop, the selected row carries it
+  const rovingKey = state.selected && convs.some((c) => c.key === state.selected)
+    ? state.selected
+    : convs[0].key;
   listEl.innerHTML = convs.map((c, i) => {
     const last = c.last;
     const phone = state.phones.find((p) => p.id === last.phoneId);
@@ -374,6 +405,8 @@ function renderList() {
     ].filter(Boolean).join('');
     return `
       <div class="conv ${state.selected === c.key ? 'on' : ''} ${c.unread ? 'unread' : ''}"
+           role="option" aria-selected="${state.selected === c.key}"
+           tabindex="${c.key === rovingKey ? 0 : -1}"
            data-conv="${esc(c.key)}" style="animation-delay:${Math.min(i, 12) * 18}ms">
         <span class="avatar" style="${avatarStyle(c.key)}">${esc(initials(c.key))}</span>
         <div class="conv-body">
@@ -431,6 +464,20 @@ function renderThread() {
   const scroller = $('#threadScroll');
   scroller.innerHTML = `<div class="bubbles">${html}</div>`;
   requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; });
+}
+
+/** Select a conversation from either a pointer click or the keyboard. */
+function openConversation(key) {
+  state.selected = key;
+  window.sms.markSeen(key).then((n) => {
+    if (!n) return;
+    for (const m of state.messages) if (m.address === key) m.seen = true;
+    renderNav();
+    renderList();
+    renderStatus();
+  }).catch(() => {});
+  renderList();
+  renderThread();
 }
 
 function renderMeta() {
@@ -500,21 +547,57 @@ function startLocalizer() {
 /* ---------------------------------------------------------------- modal ─── */
 
 let modalCloser = null;
+let modalReturnFocus = null;
+
+const FOCUSABLE = 'button:not([disabled]):not([tabindex="-1"]), [href], input:not([disabled]), '
+  + 'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function openModal(html, { onMount, wide = false } = {}) {
   const layer = $('#modalLayer');
   const card = $('#modalCard');
+  const opener = document.activeElement;
   card.className = `modal glass${wide ? ' wide' : ''}`;
-  card.innerHTML = html;
+  // The scrollable body and the action footer are separate boxes, so the last
+  // form row can never be covered by the buttons.
+  card.innerHTML = `<div class="modal-body">${html}</div>`;
+  const actions = card.querySelector('.modal-body > .modal-actions');
+  if (actions) card.appendChild(actions);
   localizeDom(card);
   layer.hidden = false;
+  modalReturnFocus = opener instanceof HTMLElement ? opener : null;
   modalCloser = () => {
     layer.hidden = true;
     card.innerHTML = '';
     modalCloser = null;
+    const back = modalReturnFocus;
+    modalReturnFocus = null;
+    if (back && document.contains(back)) back.focus();
   };
   card.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeModal));
   if (onMount) onMount(card);
+  trapFocus(card);
+  const first = card.querySelector(FOCUSABLE);
+  if (first) first.focus();
+}
+
+/** Keep Tab inside the dialog; the dialog itself closes on Esc (global keymap). */
+function trapFocus(card) {
+  if (card.dataset.trap === '1') return;
+  card.dataset.trap = '1';
+  card.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const items = [...card.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 }
 
 function closeModal() { if (modalCloser) modalCloser(); }
@@ -544,14 +627,41 @@ function showContextMenu(x, y, items) {
   ctxMenuEl = el;
 }
 
+/**
+ * One persistent toast node: screen readers get a stable live region and only
+ * the text changes. Re-showing it toggles [hidden], which restarts the CSS
+ * entrance animation without rebuilding the element.
+ */
+let toastEl = null;
+let toastTimer = 0;
+
+function ensureToast() {
+  const box = $('#toasts');
+  box.setAttribute('role', 'status');
+  box.setAttribute('aria-live', 'polite');
+  box.setAttribute('aria-atomic', 'true');
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.className = 'toast';
+    toastEl.hidden = true;
+    box.appendChild(toastEl);
+  }
+  return toastEl;
+}
+
 function toast(message, kind = '') {
-  const el = document.createElement('div');
-  el.className = `toast ${kind}`;
+  const el = ensureToast();
+  clearTimeout(toastTimer);
+  el.className = `toast ${kind}`.trim();
   el.textContent = localizeText(message);
-  $('#toasts').appendChild(el);
-  setTimeout(() => {
+  el.classList.remove('out');
+  el.hidden = false;
+  toastTimer = setTimeout(() => {
     el.classList.add('out');
-    setTimeout(() => el.remove(), 320);
+    toastTimer = setTimeout(() => {
+      el.hidden = true;
+      el.classList.remove('out');
+    }, 340);
   }, kind === 'err' ? 4200 : 2400);
 }
 
@@ -761,23 +871,23 @@ function openSettings() {
     </div>
     <div class="setting-row">
       <div class="setting-copy"><b>开机自动启动</b><span>登录 Windows 后静默在托盘运行</span></div>
-      <button class="switch ${s.autoStart ? 'on' : ''}" data-toggle="autoStart"></button>
+      <button class="switch ${s.autoStart ? 'on' : ''}" role="switch" aria-checked="${Boolean(s.autoStart)}" aria-label="开机自动启动" data-toggle="autoStart"></button>
     </div>
     <div class="setting-row">
       <div class="setting-copy"><b>启动后最小化</b><span>不弹出主窗口，只在托盘里待命</span></div>
-      <button class="switch ${s.startHidden ? 'on' : ''}" data-toggle="startHidden"></button>
+      <button class="switch ${s.startHidden ? 'on' : ''}" role="switch" aria-checked="${Boolean(s.startHidden)}" aria-label="启动后最小化" data-toggle="startHidden"></button>
     </div>
     <div class="setting-row">
       <div class="setting-copy"><b>关闭窗口时最小化到托盘</b><span>保持后台同步，不退出程序</span></div>
-      <button class="switch ${s.closeToTray ? 'on' : ''}" data-toggle="closeToTray"></button>
+      <button class="switch ${s.closeToTray ? 'on' : ''}" role="switch" aria-checked="${Boolean(s.closeToTray)}" aria-label="关闭窗口时最小化到托盘" data-toggle="closeToTray"></button>
     </div>
     <div class="setting-row">
       <div class="setting-copy"><b>启动时自动同步</b><span>打开程序后立刻拉取一次</span></div>
-      <button class="switch ${s.syncOnStart ? 'on' : ''}" data-toggle="syncOnStart"></button>
+      <button class="switch ${s.syncOnStart ? 'on' : ''}" role="switch" aria-checked="${Boolean(s.syncOnStart)}" aria-label="启动时自动同步" data-toggle="syncOnStart"></button>
     </div>
     <div class="setting-row">
       <div class="setting-copy"><b>新短信桌面通知</b><span>程序在后台时弹出系统通知</span></div>
-      <button class="switch ${s.notifyNew ? 'on' : ''}" data-toggle="notifyNew"></button>
+      <button class="switch ${s.notifyNew ? 'on' : ''}" role="switch" aria-checked="${Boolean(s.notifyNew)}" aria-label="新短信桌面通知" data-toggle="notifyNew"></button>
     </div>
     <div class="setting-row">
       <div class="setting-copy"><b>定时同步</b><span>后台按间隔自动拉取新短信</span></div>
@@ -847,6 +957,7 @@ function openSettings() {
           const key = btn.dataset.toggle;
           const next = !btn.classList.contains('on');
           btn.classList.toggle('on', next);
+          btn.setAttribute('aria-checked', String(next));
           state.settings = await window.sms.setSettings({ [key]: next });
           if (key === 'autoStart') {
             toast(next ? '已开启开机自启' : '已关闭开机自启', 'ok');
@@ -861,11 +972,8 @@ function openSettings() {
         });
       });
       card.querySelector('#setLang').addEventListener('change', async (e) => {
-        const lang = e.target.value;
-        await window.sms.setSettings({ lang });
-        // a reload is the cheapest way to re-render the static shell in the
-        // new language; the setting is already persisted
-        window.location.reload();
+        state.settings = await window.sms.setSettings({ lang: e.target.value });
+        applyLanguage();
       });
 
       card.querySelector('#setInterval').addEventListener('change', async (e) => {
@@ -992,6 +1100,16 @@ function localeTag() {
   return { zh: 'zh-CN', ja: 'ja-JP', en: 'en-US' }[window.I18N.getLang()] || 'en-US';
 }
 
+/** Switch language on the live DOM — no window reload, so state survives. */
+function applyLanguage() {
+  const lang = resolveLang(state.settings.lang, navigator.language);
+  setLang(lang);
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+  document.title = t('Windows SMS Bridge · 短信桥');
+  relocalizeDom(document.body);
+  renderAll();
+}
+
 async function reload() {
   const snap = await window.sms.getState();
   applyState(snap);
@@ -1068,18 +1186,52 @@ function bindEvents() {
   $('#convList').addEventListener('click', (e) => {
     const conv = e.target.closest('[data-conv]');
     if (!conv) return;
-    const key = conv.dataset.conv;
-    state.selected = key;
-    window.sms.markSeen(key).then((n) => {
-      if (!n) return;
-      for (const m of state.messages) if (m.address === key) m.seen = true;
-      renderNav();
-      renderList();
-      renderStatus();
-    }).catch(() => {});
-    renderList();
-    renderThread();
+    openConversation(conv.dataset.conv);
   });
+
+  // listbox keyboard model: one tab stop for the whole list, arrows move the
+  // roving tabindex (and the selection, so the thread pane follows along)
+  const convList = $('#convList');
+  convList.setAttribute('role', 'listbox');
+  convList.tabIndex = 0;
+  convList.addEventListener('keydown', (e) => {
+    const rows = [...convList.querySelectorAll('[data-conv]')];
+    if (!rows.length) return;
+    const cur = rows.findIndex((r) => r.dataset.conv === state.selected);
+    const move = (i) => {
+      const row = rows[Math.max(0, Math.min(rows.length - 1, i))];
+      if (!row) return;
+      openConversation(row.dataset.conv);
+      // renderList replaced the nodes; put focus back on the same row
+      const again = [...convList.querySelectorAll('[data-conv]')]
+        .find((r) => r.dataset.conv === row.dataset.conv);
+      if (again) again.focus();
+    };
+    switch (e.key) {
+      case 'ArrowDown': e.preventDefault(); move(cur + 1); break;
+      case 'ArrowUp': e.preventDefault(); move(cur < 0 ? 0 : cur - 1); break;
+      case 'Home': e.preventDefault(); move(0); break;
+      case 'End': e.preventDefault(); move(rows.length - 1); break;
+      case 'Enter':
+      case ' ':
+      case 'ArrowRight': {
+        const row = rows[cur < 0 ? 0 : cur];
+        if (!row) return;
+        e.preventDefault();
+        openConversation(row.dataset.conv);
+        const again = [...convList.querySelectorAll('[data-conv]')]
+          .find((r) => r.dataset.conv === row.dataset.conv);
+        if (again) again.focus();
+        break;
+      }
+      default:
+    }
+  });
+
+  // pause the ambient blob animation while the window sits in the tray
+  const setIdle = () => document.body.classList.toggle('is-idle', document.hidden);
+  document.addEventListener('visibilitychange', setIdle);
+  setIdle();
 
   // device context menu
   $('#deviceChips').addEventListener('contextmenu', (e) => {
@@ -1166,7 +1318,10 @@ function bindIpc() {
   window.sms.onSyncStarted(() => { state.syncing = true; renderMeta(); });
   window.sms.onSyncProgress((p) => {
     if (p.phase === 'fetching') {
-      $('#listMetaText').textContent = `正在从${state.phones.find((x) => x.id === p.phoneId)?.name || '手机'}读取 · 已获取 ${p.count} 条`;
+      $('#listMetaText').textContent = t('正在从 {name} 读取 · 已获取 {n} 条', {
+        name: state.phones.find((x) => x.id === p.phoneId)?.name || t('手机'),
+        n: p.count,
+      });
     }
   });
   window.sms.onSyncError((e) => {
@@ -1179,6 +1334,7 @@ function bindIpc() {
 async function init() {
   bindEvents();
   bindIpc();
+  ensureToast();
 
   // brand logo
   $('#brandLogo').innerHTML = brandMark();
