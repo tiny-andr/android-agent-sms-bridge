@@ -58,6 +58,9 @@
     <string name="selfcheck_battery">忽略电池优化</string>
     <string name="selfcheck_service">服务在运行</string>
     <string name="selfcheck_network">局域网可访问</string>
+    <string name="selfcheck_otp">验证码短信可读</string>
+    <string name="selfcheck_otp_hint">系统「验证码安全保护」已开启：网站和运营商发来的验证码短信会被系统对第三方隐藏，本 App 和 Agent 都读不到，OTP 查询会一直是空的。请在系统设置或信息 App 里关闭「验证码安全保护」。</string>
+    <string name="selfcheck_otp_btn">打开设置</string>
     <string name="selfcheck_rom">厂商自启动 / 应用速冻</string>
     <string name="selfcheck_battery_hint">Doze 下网络会被挂起，必须加入白名单</string>
     <string name="selfcheck_rom_hint">国产 ROM（realme/OPPO 等）建议三步：1) 应用管理 → 本应用 → 耗电行为选「完全允许后台行为」、允许自启动；2) 关闭省电模式；3) 最近任务卡片下拉锁定。App 自带 20 秒心跳可对抗速冻，这些设置能让它更稳。</string>

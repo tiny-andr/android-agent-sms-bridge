@@ -68,6 +68,16 @@ class SelfCheckActivity : AppCompatActivity() {
             }
         }
 
+        // 2b) ColorOS verification-code protection: blocks OTP SMS for every reader
+        val otpBlocked = SmsBridge.repo.verificationCodeBlocked()
+        addCheck(
+            getString(R.string.selfcheck_otp), !otpBlocked,
+            if (otpBlocked) getString(R.string.selfcheck_otp_hint) else null,
+            if (otpBlocked) getString(R.string.selfcheck_otp_btn) else null
+        ) {
+            runCatching { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+        }
+
         // 3) battery optimisation
         val pm = getSystemService(PowerManager::class.java)
         val batteryOk = pm.isIgnoringBatteryOptimizations(packageName)

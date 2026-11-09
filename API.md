@@ -68,12 +68,15 @@ METHOD \n PATH \n RAW_QUERY_STRING \n TIMESTAMP \n NONCE
   "battery": 87, "charging": false, "uptime_s": 1234,
   "paired_clients": 1, "pending_events": 3, "latest_seq": 12,
   "server_time": 1762345678901,
+  "verification_code_blocked": false,
   "sims": [{"slot": 0, "sub_id": 1, "carrier": "中国电信", "number": "+8613800000000"},
            {"slot": 1, "sub_id": 2, "carrier": "中国电信", "number": ""}]
 }
 ```
 
 `number` 是这张卡的本机号码，读自系统的 `SubscriptionInfo`。运营商没有把号码写进 SIM 卡时为空字符串（部分机型/号段），客户端应回退到 `slot` 分组，不要假设它一定有值。
+
+`verification_code_blocked` 为 `true` 时，系统的「验证码安全保护」正开着：`MmsSmsProvider` 会对**所有第三方读取者**（包括 adb shell）过滤掉验证码短信，接口因此永远返回空，只有用户在手机设置里关掉才能恢复。
 
 ### `GET /v1/sms`（签名）
 

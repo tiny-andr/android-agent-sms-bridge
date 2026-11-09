@@ -58,6 +58,9 @@
     <string name="selfcheck_battery">Ignore battery optimization</string>
     <string name="selfcheck_service">Service is running</string>
     <string name="selfcheck_network">Reachable on LAN</string>
+    <string name="selfcheck_otp">Verification SMS readable</string>
+    <string name="selfcheck_otp_hint">The system\'s “verification code protection” is on: OTP messages are hidden from every third-party reader, so neither this app nor any agent can see them and OTP queries stay empty. Turn it off in system settings or the Messages app.</string>
+    <string name="selfcheck_otp_btn">Open settings</string>
     <string name="selfcheck_rom">Vendor auto-start / app freeze</string>
     <string name="selfcheck_battery_hint">Doze suspends network access; whitelisting is required</string>
     <string name="selfcheck_rom_hint">On Chinese vendor ROMs (realme/OPPO etc.): 1) App management → this app → battery behaviour 「allow all background activity」 and allow auto-start; 2) turn off power saving mode; 3) lock the app in recents. The built-in 20s heartbeat fights app freezing, these settings make it stable.</string>

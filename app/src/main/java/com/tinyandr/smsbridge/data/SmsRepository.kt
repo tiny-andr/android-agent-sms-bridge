@@ -77,6 +77,22 @@ class SmsRepository(private val context: Context) {
 
     private fun simFor(subId: Int): SimInfo? = sims().firstOrNull { it.subId == subId }
 
+    /**
+     * ColorOS / realme "verification code protection". While it is on, MmsSmsProvider
+     * filters out every OTP message for all third-party readers (shell included), so
+     * the code silently never reaches an agent. Only the user can turn it off.
+     */
+    fun verificationCodeBlocked(): Boolean = try {
+        android.provider.Settings.System.getInt(
+            context.contentResolver,
+            "pref_key_forbid_read_verification_code",
+            0
+        ) == 1
+    } catch (t: Throwable) {
+        Log.w(TAG, "verification code flag unreadable: ${t.message}")
+        false
+    }
+
     fun query(q: SmsQuery): List<SmsMessage> {
         val now = System.currentTimeMillis()
         val where = StringBuilder()

@@ -58,6 +58,9 @@
     <string name="selfcheck_battery">電池最適化の除外</string>
     <string name="selfcheck_service">サービスが実行中</string>
     <string name="selfcheck_network">LAN から到達可能</string>
+    <string name="selfcheck_otp">確認コード SMS を読める</string>
+    <string name="selfcheck_otp_hint">システムの「確認コード保護」が有効です。認証コード SMS は第三者から隠されるため、本アプリも Agent も読めず、OTP 検索は常に空になります。システム設定またはメッセージアプリで無効にしてください。</string>
+    <string name="selfcheck_otp_btn">設定を開く</string>
     <string name="selfcheck_rom">ベンダーの自動起動 / アプリ凍結</string>
     <string name="selfcheck_battery_hint">Doze 中はネットワークが停止します。ホワイトリスト登録が必要です</string>
     <string name="selfcheck_rom_hint">中国メーカー ROM（realme/OPPO など）の場合：1) アプリ管理 → 本アプリ → 電池動作を「バックグラウンド動作をすべて許可」にし、自動起動を許可；2) 省電力モードをオフ；3) 最近使ったアプリでロック。内蔵の20秒ハートビートが凍結対策になります。</string>

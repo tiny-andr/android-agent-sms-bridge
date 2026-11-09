@@ -179,6 +179,7 @@ class BridgeServer(private val ctx: Context, port: Int) : NanoHTTPD(port) {
                 .put("pending_events", SmsBridge.events.count())
                 .put("latest_seq", SmsBridge.events.latestSeq())
                 .put("server_time", System.currentTimeMillis())
+                .put("verification_code_blocked", SmsBridge.repo.verificationCodeBlocked())
                 .put("sims", sims)
         )
     }
