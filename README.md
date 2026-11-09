@@ -72,9 +72,19 @@ Requires Node.js 18+.
 ```bash
 npm install
 npm start            # run from source
-npm run pack         # package a Windows build into dist/
+npm run pack         # portable folder, dist/
+npm run dist         # installer + portable zip, release/
 npm run icons        # regenerate the app icons (Python + Pillow)
 ```
+
+`npm run dist` produces two artefacts:
+
+| Artefact | Use |
+|---|---|
+| `Windows-SMS-Bridge-Setup-1.0.0.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
+| `Windows SMS Bridge-1.0.0-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
+
+Both keep all data in `%APPDATA%\Windows SMS Bridge\`, so switching between them keeps your pairings.
 
 ## Data
 

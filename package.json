@@ -10,11 +10,56 @@
   "scripts": {
     "start": "electron .",
     "pack": "npx @electron/packager . \"Windows SMS Bridge\" --platform=win32 --arch=x64 --out=dist --icon=assets/icon.ico --overwrite --app-version=1.0.0 --ignore=\"^/(dist|\\\\.shots|\\\\.demo-data|tools|\\\\.git)(/|$)\"",
-    "icons": "python tools/make_icons.py"
+    "icons": "python tools/make_icons.py",
+    "dist": "electron-builder --win nsis zip"
   },
   "devDependencies": {
     "@electron/packager": "^20.3.0",
     "electron": "^33.2.0",
     "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.windowssmsbridge.windows",
+    "productName": "Windows SMS Bridge",
+    "copyright": "MIT licensed",
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Windows SMS Bridge",
+      "artifactName": "Windows-SMS-Bridge-Setup-${version}.${ext}",
+      "uninstallDisplayName": "Windows SMS Bridge"
+    }
   }
 }

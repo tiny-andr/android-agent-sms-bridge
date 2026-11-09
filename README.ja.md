@@ -72,9 +72,19 @@ Node.js 18 以降が必要です。
 ```bash
 npm install
 npm start            # ソースから起動
-npm run pack         # Windows 版を dist/ にパッケージ
+npm run pack         # ポータブル版（dist/）
+npm run dist         # インストーラー + ポータブル zip（release/）
 npm run icons        # アイコンを再生成（Python + Pillow）
 ```
+
+`npm run dist` は 2 つ出力します。
+
+| ファイル | 用途 |
+|---|---|
+| `Windows-SMS-Bridge-Setup-1.0.0.exe` | インストーラー：現在のユーザーに導入し、スタートメニューとデスクトップにショートカットを作成、「アプリと機能」から削除可能。**管理者権限は不要** |
+| `Windows SMS Bridge-1.0.0-win.zip` | ポータブル版：任意のフォルダに解凍して exe を実行するだけ。インストール不要 |
+
+どちらもデータは `%APPDATA%\Windows SMS Bridge\` に保存されるため、相互に切り替えてもペアリングは保持されます。
 
 ## データ
 

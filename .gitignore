@@ -13,3 +13,6 @@ __pycache__/
 .workbuddy/
 .tmp-*/
 __pycache__/
+
+# electron-builder output
+release/
