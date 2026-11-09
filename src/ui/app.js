@@ -103,16 +103,9 @@ function shortAddress(addr) {
   return a || '未知号码';
 }
 
-/** Deterministic light-tint gradient per address; the ink is always dark. */
-function avatarStyle(key) {
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
-  const h2 = (h + 42) % 360;
-  // Both stops share one lightness band (66%) so the initials read the same
-  // anywhere on the tile; dark ink then clears 4.5:1 on every one of 360 hues.
-  // Sweep: npm run avatar:contrast (worst hue h=240 -> 4.82:1).
-  return `background: linear-gradient(145deg, hsl(${h} 72% 66%), hsl(${h2} 68% 66%));`
-    + 'color: var(--avatar-ink-dark); text-shadow: none;';
+/** Monochrome glass tile: the fill is the shared 8% tint, the ink is the text colour. */
+function avatarStyle() {
+  return 'background: rgb(var(--tint) / 0.08);';
 }
 
 function initials(addr) {
@@ -128,7 +121,9 @@ function initials(addr) {
 const REPO_PHONE = 'https://github.com/tiny-andr/android-agent-sms-bridge';
 const REPO_SELF = 'https://github.com/tiny-andr/win-sms-bridge';
 
-const THEMES = ['dark', 'light'];
+const THEMES = ['dark', 'light', 'paper'];
+const THEME_NEXT = { dark: 'light', light: 'paper', paper: 'dark' };
+const THEME_LABEL = { dark: '深色', light: '冷白', paper: '米白' };
 const ICON_SUN = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>';
 const ICON_MOON = '<path d="M20.2 14.4A8.4 8.4 0 0 1 9.6 3.8 8.4 8.4 0 1 0 20.2 14.4Z"/>';
 
@@ -149,7 +144,7 @@ function applyTheme(theme, { persist = false } = {}) {
   const icon = $('#themeIcon');
   if (icon) icon.innerHTML = next === 'dark' ? ICON_SUN : ICON_MOON;
   const btn = $('#btnTheme');
-  if (btn) btn.title = next === 'dark' ? t('切换到米白主题') : t('切换到深色主题');
+  if (btn) btn.title = t('切换到' + THEME_LABEL[THEME_NEXT[next]] + '主题');
   if (persist) {
     state.settings = { ...state.settings, theme: next };
     window.sms.setSettings({ theme: next }).catch(() => {});
@@ -867,10 +862,11 @@ function openSettings() {
     </div>
 
     <div class="setting-row">
-      <div class="setting-copy"><b>外观主题</b><span>深色玻璃 / 米白纸感</span></div>
+      <div class="setting-copy"><b>外观主题</b><span>深色玻璃 / 冷白玻璃 / 米白纸感</span></div>
       <div class="segmented" id="setTheme">
         <button data-theme-set="dark" class="${(s.theme || 'dark') === 'dark' ? 'on' : ''}">深色</button>
-        <button data-theme-set="light" class="${s.theme === 'light' ? 'on' : ''}">米白</button>
+        <button data-theme-set="light" class="${s.theme === 'light' ? 'on' : ''}">冷白</button>
+        <button data-theme-set="paper" class="${s.theme === 'paper' ? 'on' : ''}">米白</button>
       </div>
     </div>
     <div class="setting-row">
@@ -1194,9 +1190,9 @@ function bindEvents() {
   $('#btnAddDevice').addEventListener('click', openAddPhone);
 
   $('#btnTheme').addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    const next = THEME_NEXT[document.documentElement.dataset.theme] || 'light';
     applyTheme(next, { persist: true });
-    toast(next === 'light' ? '已切换到米白主题' : '已切换到深色主题', 'ok');
+    toast(t('已切换到' + THEME_LABEL[next] + '主题'), 'ok');
   });
 
   document.addEventListener('click', (e) => {
