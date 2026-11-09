@@ -17,13 +17,13 @@ download the SDK, then **Build → Build APK(s)**.
 
 ## TLS certificate (required before building)
 
-The app serves HTTPS and needs `app/src/main/assets/server.p12`. It holds a
+The app serves HTTPS and needs `android/app/src/main/assets/server.p12`. It holds a
 private key, so it is git-ignored. Generate it once after cloning:
 
 ```bash
-python tools/gen_cert.py
+python android/tools/gen_cert.py
 # Windows alternative:
-# powershell -ExecutionPolicy Bypass -File tools\gen-cert.ps1
+# powershell -ExecutionPolicy Bypass -File android\tools\gen-cert.ps1
 ```
 
 This writes `keystore/server.p12`, copies it into the app assets, and exports
@@ -43,13 +43,13 @@ accidentally ship an app that crashes on service start.
 
 ## Release signing (required for `assembleRelease`)
 
-Release builds are signed with `keystore/release.p12`, git-ignored. Generate it once:
+Release builds are signed with `android/keystore/release.p12`, git-ignored. Generate it once:
 
 ```bash
-python tools/gen_signing.py
+python android/tools/gen_signing.py
 ```
 
-That writes `keystore/release.p12` and `keystore/release.properties` with a random
+That writes `android/keystore/release.p12` and `android/keystore/release.properties` with a random
 password. The signature is what lets an installed copy accept an update in place:
 if the key is lost or regenerated, every installed app must be uninstalled before
 it can take a newer build. Back both files up somewhere durable, never commit them,
@@ -79,13 +79,13 @@ message pointing at the generator.
    Windows form: `sdk.dir=C\:\\Android\\Sdk`
 5. **Build**:
    ```bash
-   gradle assembleDebug
+   gradle -p android assembleDebug
    ```
-   Output: `app/build/outputs/apk/debug/app-debug.apk`
+   Output: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 Install on a phone:
 ```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ## For AI agents
@@ -97,11 +97,26 @@ asking the user:
 2. install Android command-line tools, then
    `sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"`
 3. install Gradle 8.13 and add it to `PATH`
-4. write `local.properties` containing `sdk.dir=<your sdk path>`
-5. run `gradle assembleDebug`
+4. write `android/local.properties` containing `sdk.dir=<your sdk path>`
+5. run `gradle -p android assembleDebug`
 
 First build pulls ~700 MB of dependencies into `~/.gradle/caches` (shared by every Android project
 on the machine, so only the first one is slow).
 
 Maven repositories are pre-configured to Aliyun mirrors in `settings.gradle.kts`, so mainland China
 builds work without a proxy.
+
+## Windows client
+
+The desktop app lives in `windows/` and needs Node.js 18+:
+
+```bash
+cd windows
+npm ci
+npm run dist      # installer + portable zip into windows/dist/
+npm start         # run from source
+```
+
+Both clients update themselves from this repository's GitHub Releases, so a release
+must be tagged `vX.Y.Z` and carry both `SmsBridge-X.Y.Z.apk` and
+`Windows-SMS-Bridge-Setup-X.Y.Z.exe` — each app picks its own asset by filename.

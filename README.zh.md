@@ -4,6 +4,16 @@
 
 把手机短信变成 Agent 能直接查的本地 HTTP 接口。查数据库在请求时按需发生，没有任何轮询定时器。
 
+本仓库包含两个客户端：
+
+| 组件 | 说明 |
+|---|---|
+| [android/](android/) | 手机 App：用 HTTPS 提供短信接口 |
+| [windows/](windows/) | Windows 桌面端：从已配对的手机同步并阅读 |
+
+每个 Release 同时挂两端产物（`SmsBridge-x.y.z.apk`、`Windows-SMS-Bridge-Setup-x.y.z.exe`），
+两端都从这个仓库的 Release 自动更新。
+
 ```
 ┌─────────────┐    HTTP + HMAC-SHA256    ┌──────────────┐
 │  手机 App    │ ◀──────────────────────▶ │    Agent     │

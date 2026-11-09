@@ -208,7 +208,7 @@ function initials(addr) {
 
 /** Repos shown in the About sheet. */
 const REPO_PHONE = 'https://github.com/tiny-andr/android-agent-sms-bridge';
-const REPO_SELF = 'https://github.com/tiny-andr/win-sms-bridge';
+const REPO_SELF = 'https://github.com/tiny-andr/android-agent-sms-bridge';
 
 const THEMES = ['dark', 'light', 'paper'];
 const THEME_NEXT = { dark: 'light', light: 'paper', paper: 'dark' };

@@ -3,7 +3,7 @@
 [English](README.md) | [简体中文](README.zh.md) | **日本語**
 
 - **スマホアプリのダウンロード** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases>
-- **Windows 版のダウンロード** → <https://github.com/tiny-andr/win-sms-bridge/releases/latest>
+- **Windows 版のダウンロード** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases/latest>
 
 [android-agent-sms-bridge](https://github.com/tiny-andr/android-agent-sms-bridge) の Windows デスクトップクライアントです。端末にある SMS を、クラウドを経由せずに PC で閲覧・検索・自動同期できます。
 
@@ -85,8 +85,8 @@ npm run icons        # アイコンを再生成（Python + Pillow）
 
 | ファイル | 用途 |
 |---|---|
-| `Windows-SMS-Bridge-Setup-2.0.0.exe` | インストーラー：現在のユーザーに導入し、スタートメニューとデスクトップにショートカットを作成、「アプリと機能」から削除可能。**管理者権限は不要** |
-| `Windows SMS Bridge-2.0.0-win.zip` | ポータブル版：任意のフォルダに解凍して exe を実行するだけ。インストール不要 |
+| `Windows-SMS-Bridge-Setup-2.1.0.exe` | インストーラー：現在のユーザーに導入し、スタートメニューとデスクトップにショートカットを作成、「アプリと機能」から削除可能。**管理者権限は不要** |
+| `Windows SMS Bridge-2.1.0-win.zip` | ポータブル版：任意のフォルダに解凍して exe を実行するだけ。インストール不要 |
 
 どちらもデータは `%APPDATA%\Windows SMS Bridge\` に保存されるため、相互に切り替えてもペアリングは保持されます。
 

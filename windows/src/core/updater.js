@@ -13,7 +13,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 
-const API = 'https://api.github.com/repos/tiny-andr/win-sms-bridge/releases/latest';
+const API = 'https://api.github.com/repos/tiny-andr/android-agent-sms-bridge/releases/latest';
 const ASSET_RE = /^Windows-SMS-Bridge-Setup-.*\.exe$/;
 
 /** Empty prefix = GitHub direct, the rest are public mainland mirrors. */

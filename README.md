@@ -5,6 +5,16 @@
 Turn your phone's SMS into a local HTTP API that agents can query. The SMS database is only
 touched when a request arrives — there is no polling loop.
 
+Two clients live in this repository:
+
+| Component | What it is |
+|---|---|
+| [android/](android/) | Phone app: serves the SMS API over HTTPS |
+| [windows/](windows/) | Desktop client: syncs and reads from a paired phone |
+
+Releases carry both artefacts (`SmsBridge-x.y.z.apk`, `Windows-SMS-Bridge-Setup-x.y.z.exe`),
+and both apps update themselves from this repository's releases.
+
 ```
 ┌─────────────┐    HTTP + HMAC-SHA256    ┌──────────────┐
 │  Phone app  │ ◀──────────────────────▶ │    Agent     │

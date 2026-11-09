@@ -3,7 +3,7 @@
 **English** | [简体中文](README.zh.md) | [日本語](README.ja.md)
 
 - **Phone app download** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases>
-- **Windows build download** → <https://github.com/tiny-andr/win-sms-bridge/releases/latest>
+- **Windows build download** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases/latest>
 
 A Windows desktop client for [android-agent-sms-bridge](https://github.com/tiny-andr/android-agent-sms-bridge): browse, search and auto-sync the messages that already sit on your phone, without uploading anything to a cloud.
 
@@ -85,8 +85,8 @@ npm run icons        # regenerate the app icons (Python + Pillow)
 
 | Artefact | Use |
 |---|---|
-| `Windows-SMS-Bridge-Setup-2.0.0.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
-| `Windows SMS Bridge-2.0.0-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
+| `Windows-SMS-Bridge-Setup-2.1.0.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
+| `Windows SMS Bridge-2.1.0-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
 
 Both keep all data in `%APPDATA%\Windows SMS Bridge\`, so switching between them keeps your pairings.
 

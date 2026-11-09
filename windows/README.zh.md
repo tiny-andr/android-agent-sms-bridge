@@ -3,7 +3,7 @@
 [English](README.md) | **简体中文** | [日本語](README.ja.md)
 
 - **手机 App 下载** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases>
-- **Windows 版下载** → <https://github.com/tiny-andr/win-sms-bridge/releases/latest>
+- **Windows 版下载** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases/latest>
 
 [android-agent-sms-bridge](https://github.com/tiny-andr/android-agent-sms-bridge) 的 Windows 桌面客户端：把手机里已有的短信变成电脑上可浏览、可搜索、可自动同步的本地资料，不经过任何云端。
 
@@ -85,8 +85,8 @@ npm run icons        # 重新生成图标（Python + Pillow）
 
 | 文件 | 说明 |
 |---|---|
-| `Windows-SMS-Bridge-Setup-2.0.0.exe` | 安装包：装到当前用户，创建开始菜单与桌面快捷方式，可在「应用和功能」里卸载，**不需要管理员权限** |
-| `Windows SMS Bridge-2.0.0-win.zip` | 绿色版：解压到任意目录双击 exe 即可，不写注册表、不需要安装 |
+| `Windows-SMS-Bridge-Setup-2.1.0.exe` | 安装包：装到当前用户，创建开始菜单与桌面快捷方式，可在「应用和功能」里卸载，**不需要管理员权限** |
+| `Windows SMS Bridge-2.1.0-win.zip` | 绿色版：解压到任意目录双击 exe 即可，不写注册表、不需要安装 |
 
 两者数据都在 `%APPDATA%\Windows SMS Bridge\`，可以随时互换，配对不会丢。
 
