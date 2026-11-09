@@ -33,7 +33,7 @@ if (-not $keytool) {
 $keystoreDir = Join-Path $root "keystore"
 $assetsDir = Join-Path $root "app\src\main\assets"
 $p12 = Join-Path $keystoreDir "server.p12"
-$pem = Join-Path $root "mcp\smsbridge-cert.pem"
+$pem = Join-Path (Split-Path -Parent $root) "mcp\smsbridge-cert.pem"
 
 New-Item -ItemType Directory -Force -Path $keystoreDir, $assetsDir | Out-Null
 if (Test-Path $p12) { Remove-Item $p12 -Force }

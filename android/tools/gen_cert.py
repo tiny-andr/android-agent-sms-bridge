@@ -26,9 +26,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# The repo root (one level above android/) holds the shared mcp/ clients.
+REPO = ROOT.parent
 KEYSTORE = ROOT / "keystore" / "server.p12"
 ASSETS = ROOT / "app" / "src" / "main" / "assets" / "server.p12"
-PEM = ROOT / "mcp" / "smsbridge-cert.pem"
+PEM = REPO / "mcp" / "smsbridge-cert.pem"
 
 PASSWORD = os.environ.get("SMSBRIDGE_CERT_PASSWORD", "smsbridge")
 ALIAS = "smsbridge"

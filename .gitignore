@@ -12,7 +12,7 @@ local.properties
 
 # TLS private material — never commit, regenerate with tools/gen_cert.py
 keystore/
-app/src/main/assets/server.p12
+android/app/src/main/assets/server.p12
 
 # Public pinned certificate, produced by TOFU or by tools/gen_cert.py.
 # Not committed: a fresh clone trusts the phone on first pair instead.
