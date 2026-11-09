@@ -93,8 +93,8 @@ def main() -> int:
     print(f"wrote {ASSETS}")
     print(f"wrote {PEM}")
     print()
-    print("NOTE: mcp/smsbridge-cert.pem was overwritten with this build's certificate.")
-    print("Agents connecting to THIS build must use this PEM.")
+    print("mcp/smsbridge-cert.pem now matches THIS build's certificate.")
+    print("Optional: clients pin it automatically on first pair anyway (TOFU).")
     return 0
 
 

@@ -12,6 +12,7 @@ import hmac
 import json
 import os
 import secrets
+import socket
 import time
 import ssl
 import urllib.error
@@ -39,17 +40,50 @@ CERT_FILE = Path(os.environ.get(
 _opener: urllib.request.OpenerDirector | None = None
 
 
-def _ssl_context() -> ssl.SSLContext:
-    if not CERT_FILE.exists():
-        raise SmsBridgeError(
-            f"missing pinned certificate: {CERT_FILE}. "
-            "Copy smsbridge-cert.pem next to this script or set SMSBRIDGE_CERT."
-        )
+def _ssl_context(allow_unverified: bool = False) -> ssl.SSLContext:
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     ctx.check_hostname = False  # the phone IP changes; we pin the certificate instead
+    if allow_unverified:
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    if not CERT_FILE.exists():
+        raise SmsBridgeError(
+            f"no pinned certificate yet ({CERT_FILE}). "
+            "Run the pair command first: it fetches and stores the phone certificate."
+        )
     ctx.verify_mode = ssl.CERT_REQUIRED
     ctx.load_verify_locations(cafile=str(CERT_FILE))
     return ctx
+
+
+def fetch_and_pin_certificate(base_url: str, timeout: float = 10.0) -> str:
+    """TOFU: fetch the certificate the phone presents, pin it, return its SHA-256.
+
+    This is the only moment the client talks to a server it does not trust yet.
+    From then on every request is verified against CERT_FILE.
+    """
+    parsed = urllib.parse.urlparse(base_url)
+    host = parsed.hostname
+    if not host:
+        raise SmsBridgeError(f"bad url: {base_url}")
+    port = parsed.port or 8787
+    ctx = _ssl_context(allow_unverified=True)
+    try:
+        with socket.create_connection((host, port), timeout=timeout) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as tls:
+                der = tls.getpeercert(binary_form=True)
+    except OSError as exc:
+        raise SmsBridgeError(f"cannot reach {host}:{port}: {exc}") from None
+    if not der:
+        raise SmsBridgeError("the server presented no certificate")
+    CERT_FILE.write_text(ssl.DER_cert_to_PEM_cert(der), encoding="utf-8")
+    _reset_opener()
+    return hashlib.sha256(der).hexdigest()
+
+
+def _reset_opener() -> None:
+    global _opener
+    _opener = None
 
 
 def _get_opener() -> urllib.request.OpenerDirector:
@@ -204,8 +238,34 @@ class SmsBridge:
 
 # ------------------------------------------------------------------ pairing
 
+def _pretty_fingerprint(hex_digest: str) -> str:
+    return " ".join(hex_digest[i:i + 2] for i in range(0, len(hex_digest), 2)).upper()
+
+
+def pinned_fingerprint() -> str:
+    """SHA-256 of the currently pinned certificate, lowercase hex."""
+    pem = CERT_FILE.read_text(encoding="utf-8")
+    der = ssl.PEM_cert_to_DER_cert(pem)
+    return hashlib.sha256(der).hexdigest()
+
+
 def pair(base_url: str, code: str, name: str = "agent", timeout: float = 15.0,
-         config_path: Path | None = None) -> Credentials:
+         config_path: Path | None = None, fingerprint: str | None = None) -> Credentials:
+    # Trust on first use: the first time we talk to this phone we accept whatever
+    # certificate it presents, store it, and verify every later request against it.
+    if not CERT_FILE.exists():
+        fp = fetch_and_pin_certificate(base_url, timeout)
+        print(f"[pair] pinned certificate sha256 = {_pretty_fingerprint(fp)}")
+        print("[pair] same value is shown on the phone's Pairing screen — compare if you want")
+    elif fingerprint:
+        expected = fingerprint.replace(":", "").replace(" ", "").lower()
+        actual = pinned_fingerprint()
+        if actual != expected:
+            raise SmsBridgeError(
+                f"certificate mismatch: pinned {actual}, expected {expected}. "
+                "The phone may have been re-installed with a new certificate."
+            )
+
     body = json.dumps({"code": code, "name": name}).encode("utf-8")
     resp = _http(
         "POST", base_url.rstrip("/") + "/v1/pair",

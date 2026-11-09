@@ -92,8 +92,8 @@ gradle assembleDebug       # -> app/build/outputs/apk/debug/app-debug.apk
 
 ## 安全模型
 
-- **传输层是 TLS**：App 用自签证书提供 HTTPS，Agent 端固定 `mcp/smsbridge-cert.pem`（不信任系统 CA）。
-  同一 WiFi 下的设备抓包也读不到短信正文和配对 token。
+- **传输层是 TLS**：App 用自签证书提供 HTTPS，Agent 首次配对时自动抓取并固定该证书（TOFU），
+  之后每次请求严格校验 —— 不用拷文件、不需要 CA。同一 WiFi 下的设备抓包也读不到短信正文和配对 token。
   已知局限：私钥打包在 APK 内，能反编译 APK 的人仍可解密 —— 这是自托管工具换取零配置 HTTPS 的取舍。
 - 每个 Agent 独立 token（32 字节随机），HMAC-SHA256 签名 + ±5 分钟时间窗 + nonce 防重放
 - 手机端硬上限：最大可查天数、单次条数、限流、屏蔽号码 —— Agent 改不了

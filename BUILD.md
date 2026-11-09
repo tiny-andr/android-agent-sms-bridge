@@ -32,10 +32,11 @@ This writes `keystore/server.p12`, copies it into the app assets, and exports
 **Why it is not in the repo:** committing the private key would let anyone who
 reads the repo decrypt captured traffic, which defeats TLS entirely.
 
-**What this means for your build:** the `mcp/smsbridge-cert.pem` in the repo
-belongs to the official release APK. `gen_cert.py` overwrites it with **your**
-certificate — that is correct, your agents must pin your PEM, not the official
-one.
+**What this means for your build:** the generated certificate is baked into
+*your* APK, and that is all you need — the first `pair` call from any client
+fetches the certificate and pins it automatically (TOFU). `gen_cert.py` also
+exports `mcp/smsbridge-cert.pem` in case you prefer to pre-pin it, but no client
+depends on that file existing.
 
 The build fails with a clear message if the keystore is missing, so you cannot
 accidentally ship an app that crashes on service start.

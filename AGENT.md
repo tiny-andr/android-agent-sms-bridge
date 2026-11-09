@@ -30,16 +30,24 @@ POST /v1/pair
 
 The token is shown **once**. Never log it, never commit it.
 
-### HTTPS only — pin the certificate
+### HTTPS only — trust on first use
 
-The phone does not speak plain HTTP. It presents a self-signed certificate and
-this repo ships it as [`mcp/smsbridge-cert.pem`](mcp/smsbridge-cert.pem). The
-client must pin **that file** (not the system CA store); `smsbridge_client.py`
-already does. If the PEM is missing, copy it next to the script or point
-`SMSBRIDGE_CERT` at it.
+The phone does not speak plain HTTP. It presents a self-signed certificate, and
+there is no CA to buy for a LAN IP.
 
-The SHA-256 fingerprint is also printed on the phone's pairing screen — compare
-it if you want to confirm the certificate really came from that device.
+You do not have to copy any file: the **first `pair` call** fetches the
+certificate, saves it as `mcp/smsbridge-cert.pem`, and from then on every request
+is strictly verified against it (TOFU — trust on first use).
+
+```
+$ python smsctl.py pair --url https://<phone-ip>:8787 --code <code>
+[pair] pinned certificate sha256 = 1D 96 B0 E7 ...
+[pair] same value is shown on the phone's Pairing screen — compare if you want
+```
+
+Compare that fingerprint with the one on the phone if you want to rule out a
+man-in-the-middle on the very first connection. `--fingerprint <hex>` forces the
+check.
 
 ## 2. Sign every request
 

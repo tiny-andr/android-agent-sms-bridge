@@ -2,10 +2,14 @@
 
 Base URL: `https://<phone-ip>:8787`
 
-Transport is **TLS with a self-signed certificate**. Clients must pin it:
-[`mcp/smsbridge-cert.pem`](mcp/smsbridge-cert.pem) is that certificate (SHA-256
-fingerprint is shown on the phone's pairing screen). The server does not speak
+Transport is **TLS with a self-signed certificate**. The server does not speak
 plain HTTP at all.
+
+There is no CA for a LAN IP, so clients trust the device on first use (TOFU): the
+first `pair` call fetches the certificate, stores it locally, and every later
+request is verified against it. The SHA-256 fingerprint is shown on the phone's
+pairing screen for manual comparison, and `pair --fingerprint <hex>` forces the
+check.
 
 ## 鉴权
 

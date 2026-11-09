@@ -101,9 +101,10 @@ gradle assembleDebug       # -> app/build/outputs/apk/debug/app-debug.apk
 
 ## Security model
 
-- **Transport is TLS.** The app serves HTTPS with a self-signed certificate; the agent pins
-  `mcp/smsbridge-cert.pem` instead of trusting the system CA store. A device on the same Wi-Fi cannot
-  read SMS bodies or pairing tokens from a packet capture.
+- **Transport is TLS.** The app serves HTTPS with a self-signed certificate. The agent trusts it on
+  first pair (TOFU): the certificate is fetched and pinned automatically, then strictly verified —
+  no file copying, no CA needed. A device on the same Wi-Fi cannot read SMS bodies or pairing tokens
+  from a packet capture.
   Known limit: the private key ships inside the APK, so someone who also decompiles the APK could
   decrypt. That trade-off buys zero-config HTTPS for a self-hosted tool.
 - Every agent gets its own token (32 random bytes); requests are HMAC-SHA256 signed with a ±5 minute
