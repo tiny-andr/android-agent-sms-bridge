@@ -727,6 +727,14 @@ h1, h2, h3, p { margin: 0; }
 
 .field { display: flex; flex-direction: column; gap: 7px; }
 .field > label { font-size: 12px; color: var(--label); letter-spacing: 0.3px; padding-left: 2px; }
+.field > label .field-note {
+  margin-left: 6px;
+  font-size: 10.6px;
+  letter-spacing: 0;
+  color: var(--dim);
+  opacity: 0.85;
+}
+.hint-line .hint-sub { opacity: 0.78; }
 .input {
   height: 42px;
   padding: 0 13px;
@@ -1121,6 +1129,22 @@ h1, h2, h3, p { margin: 0; }
   transition: all 0.2s var(--ease);
 }
 .device-add:hover { color: var(--text); border-color: var(--stroke-strong); background: var(--sel-hover); }
+
+.update-btn {
+  flex: none;
+  display: flex; align-items: center; gap: 6px;
+  height: 38px;
+  padding: 0 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(125, 140, 255, 0.34);
+  background: rgba(125, 140, 255, 0.16);
+  color: #d6daff;
+  font-size: 12.4px;
+  font-weight: 600;
+  transition: all 0.2s var(--ease);
+}
+.update-btn:hover { background: rgba(125, 140, 255, 0.26); border-color: rgba(125, 140, 255, 0.5); }
+.update-btn .ic { width: 15px; height: 15px; }
 .device-add .ic { width: 14px; height: 14px; }
 
 /* ============================================================================

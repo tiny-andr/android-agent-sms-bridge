@@ -621,6 +621,52 @@ function fitSidebar() {
   if (sb.scrollHeight > sb.clientHeight + 1) sb.classList.add('compact-2');
 }
 
+function renderUpdate() {
+  const btn = $('#btnUpdate');
+  if (!btn) return;
+  const u = (state.app && state.app.update) || {};
+  if (!u.available) {
+    btn.hidden = true;
+    return;
+  }
+  btn.hidden = false;
+  const p = u.progress;
+  const label = $('#updateLabel');
+  if (!label) return;
+  if (p && p.total) label.textContent = `${Math.round((p.done / p.total) * 100)}%`;
+  else if (p) label.textContent = `${Math.round(p.done / 1048576)} MB`;
+  else label.textContent = t('更新到 {v}', { v: u.version });
+}
+
+async function checkUpdates(interactive) {
+  if (state.app.update && state.app.update.checking) return;
+  try {
+    const st = await window.sms.updateCheck();
+    await reload();
+    if (!interactive) return;
+    if (st && st.available) toast(t('发现新版本 {v}', { v: st.version }), 'ok');
+    else if (st && st.error) toast(t('检查更新失败：{msg}', { msg: st.error }), 'err');
+    else toast(t('已是最新版本'), 'ok');
+  } catch (err) {
+    if (interactive) toast(t('检查更新失败：{msg}', { msg: errText(err) }), 'err');
+  }
+}
+
+async function applyUpdate() {
+  const u = (state.app && state.app.update) || {};
+  if (!u.available) return;
+  const ok = window.confirm(
+    t('更新到 {v} 会先下载安装包，然后静默安装并重启本程序。继续？', { v: u.version })
+  );
+  if (!ok) return;
+  toast(t('正在下载更新…'));
+  try {
+    await window.sms.updateApply();
+  } catch (err) {
+    toast(t('更新失败：{msg}', { msg: errText(err) }), 'err');
+  }
+}
+
 function renderAll() {
   renderNav();
   renderDevices();
@@ -629,6 +675,7 @@ function renderAll() {
   renderList();
   renderThread();
   renderMeta();
+  renderUpdate();
   requestAnimationFrame(() => { localizeDom(document.body); fitSidebar(); });
   startLocalizer();
 }
@@ -824,6 +871,7 @@ function openAddPhone(opts = {}) {
   const lastCodeHint = repairing
     ? `这台手机的旧密钥已失效（换证书后会这样）。在手机上重新生成配对码，配对后会沿用现有的短信缓存。`
     : '配对成功后，这台电脑会获得一枚独立密钥，手机的配对列表里可以看到并随时吊销它。';
+  const clientName = (state.app && state.app.clientName) || 'Windows SMS Bridge';
   openModal(() => `
     <div class="modal-title">
       <span class="logo" style="width:34px;height:34px;border-radius:12px;">
@@ -847,7 +895,7 @@ function openAddPhone(opts = {}) {
 
     <div id="tabCode" style="display:flex;flex-direction:column;gap:14px;">
       <div class="field">
-        <label>手机名称</label>
+        <label>手机名称 <small class="field-note">仅本机备注，不发给手机</small></label>
         <input class="input" id="pName" placeholder="例如：主力机 · 一加" value="${esc(repairing?.name || '')}" ${repairing ? 'readonly' : ''} />
       </div>
       <div class="field">
@@ -858,12 +906,12 @@ function openAddPhone(opts = {}) {
         <label>6 位配对码（5 分钟内有效）</label>
         <input class="input mono" id="pCode" inputmode="numeric" maxlength="6" placeholder="······" />
       </div>
-      <div class="hint-line" id="pairHint">${esc(lastCodeHint)}</div>
+      <div class="hint-line" id="pairHint">${esc(lastCodeHint)}<br /><span class="hint-sub">${esc(t('手机端会把这台电脑显示为「{name}」', { name: clientName }))}</span></div>
     </div>
 
     <div id="tabImport" style="display:none;flex-direction:column;gap:14px;">
       <div class="field">
-        <label>手机名称</label>
+        <label>手机名称 <small class="field-note">仅本机备注，不发给手机</small></label>
         <input class="input" id="iName" placeholder="例如：备用机" />
       </div>
       <div class="field">
@@ -1189,6 +1237,7 @@ function openAbout() {
       ${selfRepo}
     </div>
     <div class="modal-actions">
+      <button class="btn ghost" id="btnCheckUpdate">检查更新</button>
       <button class="btn primary" data-close>关闭</button>
     </div>
   `);
@@ -1332,6 +1381,12 @@ function bindEvents() {
   });
 
   $('#btnAddDevice').addEventListener('click', openAddPhone);
+  $('#btnUpdate').addEventListener('click', applyUpdate);
+  // Delegated: the About sheet is rebuilt on every open, so a direct binding
+  // would be lost after the first render.
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#btnCheckUpdate')) checkUpdates(true);
+  });
 
   $('#btnTheme').addEventListener('click', () => {
     const next = THEME_NEXT[document.documentElement.dataset.theme] || 'light';
@@ -1532,6 +1587,13 @@ function bindIpc() {
     if (e.message) toast(`${e.name || '手机'}：${e.message}`, 'err');
   });
   window.sms.onSettingsUpdate((s) => { state.settings = s; });
+  window.sms.onUpdateProgress((p) => {
+    const label = $('#updateLabel');
+    if (!label || !p) return;
+    label.textContent = p.total
+      ? `${Math.round((p.done / p.total) * 100)}%`
+      : `${Math.round(p.done / 1048576)} MB`;
+  });
   window.sms.onMaximized(() => {});
 }
 

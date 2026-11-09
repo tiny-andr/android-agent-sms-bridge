@@ -13,12 +13,14 @@ const {
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 
 const { Store } = require('./src/core/store');
 const { recoverProfile } = require('./src/core/migrate');
 const i18n = require('./src/shared/i18n');
 const t = (key, vars) => i18n.t(key, vars);
 const { syncPhone } = require('./src/core/sync');
+const updater = require('./src/core/updater');
 const {
   pair, health, normalizeBase, pinCertificate, prettyFingerprint, BridgeError,
 } = require('./src/core/smsbridge');
@@ -48,6 +50,17 @@ let scheduler = null;
 let quitting = false;
 let lastSyncSummary = null;
 
+/** Latest release found by the updater; kept out of snapshots (the URL is bulky). */
+let updateAsset = null;
+let updateState = {
+  available: false,
+  version: '',
+  notes: '',
+  checking: false,
+  progress: null,
+  error: '',
+};
+
 // --------------------------------------------------------------------- setup
 
 const gotLock = app.requestSingleInstanceLock();
@@ -59,6 +72,19 @@ if (!gotLock) {
 
 function dataDir() {
   return app.getPath('userData');
+}
+
+/**
+ * Identity the phone shows in its paired-agent list. Deliberately the machine
+ * name, not the phone label typed in the dialog: that field is a local note.
+ */
+function defaultClientName() {
+  try {
+    const host = os.hostname();
+    return host || 'Windows SMS Bridge';
+  } catch {
+    return 'Windows SMS Bridge';
+  }
 }
 
 /**
@@ -429,12 +455,78 @@ function snapshot() {
     settings: store.settings,
     stats: store.stats(),
     sync: { ...syncState },
-    app: { version: app.getVersion(), dataDir: dataDir(), autostart: Boolean(store.settings.autoStart) },
+    app: {
+      version: app.getVersion(),
+      dataDir: dataDir(),
+      autostart: Boolean(store.settings.autoStart),
+      clientName: defaultClientName(),
+      update: updateState,
+    },
   };
+}
+
+/**
+ * Silent on startup, explicit when the user clicks "check for updates".
+ * The release metadata is only ever read from the GitHub API, so the SHA-256
+ * used to accept the download cannot be influenced by a mirror.
+ */
+async function runUpdateCheck({ silent = true } = {}) {
+  if (updateState.checking) return;
+  updateState = { ...updateState, checking: true, error: '' };
+  send('state:changed', { reason: 'update' });
+  try {
+    const found = await updater.check(app.getVersion());
+    updateAsset = found ? found.asset : null;
+    updateState = {
+      available: Boolean(found),
+      version: found ? found.version : '',
+      notes: found ? found.notes : '',
+      checking: false,
+      progress: null,
+      error: '',
+    };
+  } catch (err) {
+    updateAsset = null;
+    updateState = {
+      available: false,
+      version: '',
+      notes: '',
+      checking: false,
+      progress: null,
+      error: err.message,
+    };
+  }
+  send('state:changed', { reason: 'update' });
 }
 
 function registerIpc() {
   ipcMain.handle('state:get', () => snapshot());
+
+  ipcMain.handle('update:check', async () => {
+    await runUpdateCheck({ silent: false });
+    return updateState;
+  });
+
+  ipcMain.handle('update:apply', async () => {
+    if (!updateAsset) throw new BridgeError(t('没有可用的更新'));
+    const dir = path.join(dataDir(), 'updates');
+    updateState = { ...updateState, progress: { done: 0, total: updateAsset.size || 0 } };
+    send('state:changed', { reason: 'update' });
+    try {
+      const file = await updater.download(updateAsset, dir, (done, total) => {
+        updateState = { ...updateState, progress: { done, total } };
+        send('update:progress', { done, total });
+      });
+      updater.installAndRestart(file, process.execPath);
+      quitting = true;
+      setTimeout(() => app.quit(), 400);
+      return { ok: true };
+    } catch (err) {
+      updateState = { ...updateState, progress: null, error: err.message };
+      send('state:changed', { reason: 'update' });
+      throw err;
+    }
+  });
 
   ipcMain.handle('window:minimize', () => win?.minimize());
   ipcMain.handle('window:toggle-maximize', () => {
@@ -463,7 +555,7 @@ function registerIpc() {
     const creds = await pair({
       baseUrl: pin.base,
       code,
-      name: name || 'Windows SMS Bridge',
+      name: defaultClientName(),
       certPem: pin.pem,
     });
 
@@ -616,6 +708,8 @@ app.whenReady().then(async () => {
 
   const first = store.listPhones()[0];
   if (first) setTimeout(() => refreshHealth(first.id), 2500);
+
+  setTimeout(() => { runUpdateCheck({ silent: true }).catch(() => {}); }, 8000);
 
   if (store.settings.syncOnStart && store.listPhones().length) {
     setTimeout(() => { if (!syncState.running) syncAll({ manual: false }); }, 4000);

@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('sms', {
 
   syncOne: (id) => ipcRenderer.invoke('sync:one', { id }),
   syncAll: () => ipcRenderer.invoke('sync:all', {}),
+  updateCheck: () => ipcRenderer.invoke('update:check'),
+  updateApply: () => ipcRenderer.invoke('update:apply'),
   setSettings: (patch) => ipcRenderer.invoke('settings:set', patch),
   clearMessages: (phoneId) => ipcRenderer.invoke('messages:clear', phoneId),
   markSeen: (address) => ipcRenderer.invoke('messages:seen', address),
@@ -38,6 +40,7 @@ contextBridge.exposeInMainWorld('sms', {
   onSyncProgress: listener('sync:progress'),
   onSyncStarted: listener('sync:started'),
   onSyncError: listener('sync:error'),
+  onUpdateProgress: listener('update:progress'),
   onSettingsUpdate: listener('settings:update'),
   onMaximized: listener('window:maximized'),
 });
