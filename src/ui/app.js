@@ -121,14 +121,22 @@ function fmtPhone(num) {
 }
 
 /**
- * Stable grouping key for the receiving SIM: its own number when the phone
- * reports one, otherwise the physical slot. Older cached rows only have the
- * slot, so both forms coexist without breaking existing history.
+ * Stable grouping key for the receiving SIM: the physical slot, because rows
+ * cached before 1.1.0 carry the slot but not the number. Keying by number would
+ * split one card into "slot:0" and "num:..." groups after an upgrade.
  */
 function simKeyOf(m) {
-  if (m && m.simNumber) return `num:${simDigits(m.simNumber)}`;
   if (m && typeof m.slot === 'number' && m.slot >= 0) return `slot:${m.slot}`;
+  if (m && m.simNumber) return `num:${simDigits(m.simNumber)}`;
   return '';
+}
+
+/** The live number of a slot, taken from the phone's health snapshot. */
+function slotNumber(phoneId, slot) {
+  const p = state.phones.find((x) => x.id === phoneId);
+  const sims = (p && p.health && Array.isArray(p.health.sims)) ? p.health.sims : [];
+  const hit = sims.find((s) => s.slot === slot);
+  return hit && hit.number ? hit.number : '';
 }
 
 /** "卡1 · 2132" — slot plus the last four digits, or just "卡1" when unknown. */
@@ -141,7 +149,15 @@ function simLabel(slot, number) {
 }
 
 function simLabelOf(m) {
-  return simLabel(m && m.slot, m && m.simNumber);
+  const slot = m && m.slot;
+  // Rows cached before 1.1.0 have no simNumber, so fall back to the live card.
+  const number = (m && m.simNumber) || slotNumber(m && m.phoneId, slot);
+  return simLabel(slot, number);
+}
+
+/** Sidebar label: the number itself when known, otherwise the slot. */
+function simOptionLabel(slot, number) {
+  return fmtPhone(number) || simLabel(slot, '');
 }
 
 /** Every card of the selected phone, merged from its health snapshot and cache. */
@@ -153,9 +169,9 @@ function simOptions() {
   const healthSims = (phone && phone.health && Array.isArray(phone.health.sims)) ? phone.health.sims : [];
   const opts = new Map();
   for (const s of healthSims) {
-    const key = s.number ? `num:${simDigits(s.number)}` : `slot:${s.slot}`;
+    const key = `slot:${s.slot}`;
     opts.set(key, {
-      key, slot: s.slot, number: s.number || '', label: simLabel(s.slot, s.number), count: 0,
+      key, slot: s.slot, number: s.number || '', label: simOptionLabel(s.slot, s.number), count: 0,
     });
   }
   const mode = state.view.mode;
@@ -165,8 +181,12 @@ function simOptions() {
     if (!key) continue;
     let o = opts.get(key);
     if (!o) {
-      o = { key, slot: m.slot, number: m.simNumber || '', label: simLabelOf(m), count: 0 };
+      const number = m.simNumber || slotNumber(m.phoneId, m.slot);
+      o = { key, slot: m.slot, number, label: simOptionLabel(m.slot, number), count: 0 };
       opts.set(key, o);
+    } else if (!o.number && m.simNumber) {
+      o.number = m.simNumber;
+      o.label = simOptionLabel(o.slot, o.number);
     }
     if (mode === 'inbox' && m.type !== 'inbox') continue;
     if (mode === 'sent' && m.type !== 'sent') continue;
@@ -270,12 +290,12 @@ function buildConversations() {
   return list;
 }
 
-function countBy(mode) {
+function countBy(mode, ignoreSim = false) {
   let n = 0;
   for (const m of state.messages) {
     if (m.type === 'draft') continue;
     if (state.view.phoneId && m.phoneId !== state.view.phoneId) continue;
-    if (state.view.sim && simKeyOf(m) !== state.view.sim) continue;
+    if (!ignoreSim && state.view.sim && simKeyOf(m) !== state.view.sim) continue;
     if (mode === 'inbox' && m.type !== 'inbox') continue;
     if (mode === 'sent' && m.type !== 'sent') continue;
     if (mode === 'unread' && !(m.type === 'inbox' && !m.read && !m.seen)) continue;
@@ -312,7 +332,7 @@ function renderNav() {
   }
   if (state.view.sim && !sims.some((s) => s.key === state.view.sim)) state.view.sim = null;
   simSection.hidden = false;
-  const rows = [{ key: '', label: t('全部卡'), count: countBy(state.view.mode) }, ...sims];
+  const rows = [{ key: '', label: t('全部卡'), count: countBy(state.view.mode, true) }, ...sims];
   simNav.innerHTML = rows.map((s) => `
     <button class="nav-item ${(state.view.sim || '') === s.key ? 'on' : ''}" data-sim="${esc(s.key)}">
       ${ICONS.sim}<span>${esc(s.label)}</span>

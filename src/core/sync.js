@@ -62,7 +62,10 @@ async function syncPhone(store, phoneId, { full = false, days = null, onProgress
     });
     const params = { box: 'all' };
     const sinceId = Number(phone.lastSmsId) || 0;
-    const mode = full || !sinceId ? 'full' : 'incremental';
+    // Rows cached before 1.1.0 have no simNumber, and an incremental sync would
+    // never backfill them. Do one full pass per phone and remember it.
+    const needsBackfill = !phone.simBackfilled && store.messagesOf(phoneId).length > 0;
+    const mode = (full || !sinceId || needsBackfill) ? 'full' : 'incremental';
 
     if (mode === 'full') {
       params.days = Number(days ?? store.settings.pullDays) || 30;
@@ -82,6 +85,7 @@ async function syncPhone(store, phoneId, { full = false, days = null, onProgress
       lastSyncAt: Date.now(),
       lastError: '',
       lastMode: mode,
+      simBackfilled: true,
     });
 
     onProgress?.({ phoneId, phase: 'done', ...result });
