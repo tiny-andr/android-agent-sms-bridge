@@ -409,6 +409,9 @@ function renderSideDevice() {
           <div><span>未读</span><b>${unread}</b></div>
           <div><span>在线</span><b>${phones.filter((x) => deviceStateDot(x) === 'online').length}</b></div>
         </div>
+        ${phones.some((x) => x.health && x.health.verification_code_blocked)
+          ? `<div class="sd-warn">${t('验证码保护已开启')} · ${t('验证码短信被系统隐藏，同步会漏掉它们')}</div>`
+          : ''}
       </div>`;
     return;
   }
@@ -427,6 +430,9 @@ function renderSideDevice() {
         <div><span>短信</span><b>${mine.length}</b></div>
         <div><span>未读</span><b>${mine.filter((m) => m.type === 'inbox' && !m.read && !m.seen).length}</b></div>
       </div>
+      ${h && h.verification_code_blocked
+        ? `<div class="sd-warn">${t('验证码保护已开启')} · ${t('验证码短信被系统隐藏，同步会漏掉它们')}</div>`
+        : ''}
     </div>`;
 }
 

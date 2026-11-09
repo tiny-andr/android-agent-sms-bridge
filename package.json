@@ -1,7 +1,7 @@
 {
   "name": "windows-sms-bridge",
   "productName": "Windows SMS Bridge",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Windows client for the Android SMS bridge (短信桥)",
   "main": "main.js",
   "author": "Windows SMS Bridge",
@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "pack": "npx @electron/packager . \"Windows SMS Bridge\" --platform=win32 --arch=x64 --out=dist --icon=assets/icon.ico --overwrite --app-version=1.1.1 --ignore=\"^/(dist|\\\\.shots|\\\\.demo-data|tools|\\\\.git)(/|$)\"",
+    "pack": "npx @electron/packager . \"Windows SMS Bridge\" --platform=win32 --arch=x64 --out=dist --icon=assets/icon.ico --overwrite --app-version=1.1.2 --ignore=\"^/(dist|\\\\.shots|\\\\.demo-data|tools|\\\\.git)(/|$)\"",
     "icons": "python tools/make_icons.py",
     "i18n:check": "node scripts/i18n-sweep.js",
     "avatar:contrast": "node scripts/avatar-contrast.js",
