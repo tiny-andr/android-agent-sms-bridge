@@ -85,8 +85,8 @@ npm run icons        # 重新生成图标（Python + Pillow）
 
 | 文件 | 说明 |
 |---|---|
-| `Windows-SMS-Bridge-Setup-1.2.0.exe` | 安装包：装到当前用户，创建开始菜单与桌面快捷方式，可在「应用和功能」里卸载，**不需要管理员权限** |
-| `Windows SMS Bridge-1.2.0-win.zip` | 绿色版：解压到任意目录双击 exe 即可，不写注册表、不需要安装 |
+| `Windows-SMS-Bridge-Setup-2.0.0.exe` | 安装包：装到当前用户，创建开始菜单与桌面快捷方式，可在「应用和功能」里卸载，**不需要管理员权限** |
+| `Windows SMS Bridge-2.0.0-win.zip` | 绿色版：解压到任意目录双击 exe 即可，不写注册表、不需要安装 |
 
 两者数据都在 `%APPDATA%\Windows SMS Bridge\`，可以随时互换，配对不会丢。
 
