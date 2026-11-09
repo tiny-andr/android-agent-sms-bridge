@@ -44,28 +44,41 @@
   --label: var(--muted);
   --hint: var(--dim);
   --blob-opacity: 0.62;
-  --grain-opacity: 0.16;
+  --grain-opacity: 0.055;
   --grain-blend: overlay;
-  --panel-filter: blur(52px) saturate(160%) brightness(0.92);
+  /* sharper panels; dialogs keep a stronger blur so text stays crisp */
+  --panel-filter: blur(28px) saturate(150%) brightness(0.94);
+  --panel-filter-strong: blur(34px) saturate(155%) brightness(0.95);
+  /* one wide light field plus one small high-frequency field */
   --bg-image:
-    radial-gradient(1100px 720px at 12% -8%, rgba(58, 52, 148, 0.55), transparent 62%),
-    radial-gradient(900px 640px at 96% 6%, rgba(104, 48, 138, 0.42), transparent 60%),
-    radial-gradient(1000px 700px at 60% 112%, rgba(16, 92, 112, 0.34), transparent 62%),
+    radial-gradient(1400px 900px at 6% -12%, rgba(58, 52, 148, 0.42), transparent 66%),
+    radial-gradient(320px 320px at 62% 18%, rgba(96, 80, 190, 0.30), transparent 68%),
     linear-gradient(160deg, #0a0a14 0%, #07070d 45%, #0a0812 100%);
   --scrim:
     radial-gradient(120% 90% at 50% 50%, rgba(6, 6, 12, 0.15), rgba(6, 6, 12, 0.62) 78%),
     linear-gradient(180deg, rgba(6, 6, 12, 0.34), rgba(6, 6, 12, 0.18));
-  --panel-bg: linear-gradient(155deg, rgb(var(--tint) / 0.105), rgb(var(--tint) / 0.030) 48%, rgb(var(--tint) / 0.065));
+  /* one notch brighter than before: the 28px blur reveals more background */
+  --panel-bg: linear-gradient(155deg, rgb(var(--tint) / 0.130), rgb(var(--tint) / 0.055) 48%, rgb(var(--tint) / 0.085));
+  /* rim light: bright top-left, dark bottom-right, plus a tight bottom inset */
   --panel-shadow:
     0 40px 90px -46px rgb(var(--shade) / 0.85),
     0 2px 10px -4px rgb(var(--shade) / 0.5),
-    inset 0 1px 0 rgb(var(--tint) / 0.24),
-    inset 0 -1px 0 rgb(var(--tint) / 0.05);
+    inset 1px 1px 0 rgb(var(--tint) / 0.28),
+    inset -1px -1px 0 rgb(var(--shade) / 0.55),
+    inset 0 -6px 6px -6px rgb(var(--shade) / 0.75);
+  /* one selection language: tinted glass capsule + rim */
+  --sel-bg: rgb(var(--tint) / 0.16);
+  --sel-bg-2: rgb(var(--tint) / 0.06);
+  --sel-rim: inset 0 0 0 1px rgb(var(--tint) / 0.28);
+  --sel-hover: rgb(var(--tint) / 0.09);
+  /* pointer highlight follows --mx/--my; 0.06 alpha is the ceiling */
+  --sheen-alpha: 0.06;
+  --sheen-size: 240px;
   --modal-bg: linear-gradient(158deg, rgb(48 50 72 / 0.92), rgb(22 23 34 / 0.94) 55%, rgb(28 26 44 / 0.92));
   --menu-bg: linear-gradient(158deg, rgb(46 48 68 / 0.96), rgb(22 23 34 / 0.98));
   --toast-bg: rgba(22, 22, 32, 0.78);
   --option-bg: #14141d;
-  --sheen-opacity: 0.55;
+  --sheen-opacity: 1;
   --modal-footer: linear-gradient(180deg, rgba(24, 25, 38, 0) 0%, rgba(24, 25, 38, 0.96) 42%, rgba(24, 25, 38, 1) 100%);
 
   --font: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI",
@@ -128,38 +141,32 @@ h1, h2, h3, p { margin: 0; }
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(110px);
+  filter: blur(80px);
   opacity: var(--blob-opacity);
   will-change: transform;
 }
+/* two blobs only, with a >=3x radius difference so the light has a direction */
 .b1 {
-  width: 46vw; height: 46vw; left: -6vw; top: -10vw;
-  background: radial-gradient(circle at 42% 42%, rgba(112, 96, 255, 0.95), rgba(70, 40, 160, 0.35) 58%, transparent 72%);
+  width: 620px; height: 620px; left: -180px; top: -220px;
+  background: radial-gradient(circle at 42% 42%, rgba(112, 96, 255, 0.76), rgba(70, 40, 160, 0.28) 58%, transparent 72%);
   animation: drift1 26s var(--ease) infinite alternate;
 }
 .b2 {
-  width: 40vw; height: 40vw; right: -4vw; top: 2vh;
-  background: radial-gradient(circle at 50% 50%, rgba(196, 86, 255, 0.62), transparent 70%);
+  width: 180px; height: 180px; right: 12%; top: 8%;
+  background: radial-gradient(circle at 50% 50%, rgba(196, 86, 255, 0.50), transparent 70%);
   animation: drift2 32s var(--ease) infinite alternate;
 }
-.b3 {
-  width: 46vw; height: 46vw; left: 18vw; bottom: -24vw;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 190, 200, 0.5), transparent 70%);
-  animation: drift3 30s var(--ease) infinite alternate;
-}
-.b4 {
-  width: 32vw; height: 32vw; right: 10vw; bottom: -16vw;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 120, 130, 0.3), transparent 70%);
-  animation: drift1 38s var(--ease) infinite alternate-reverse;
-}
+/* retired: the two remaining radii carry the structure on their own */
+.b3, .b4 { display: none; }
 @keyframes drift1 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(6vw, 4vh, 0) scale(1.12); } }
 @keyframes drift2 { from { transform: translate3d(0,0,0) scale(1.05); } to { transform: translate3d(-5vw, 6vh, 0) scale(0.94); } }
-@keyframes drift3 { from { transform: translate3d(0,0,0) scale(0.96); } to { transform: translate3d(4vw, -5vh, 0) scale(1.1); } }
 
 .grain {
   position: absolute; inset: 0;
   opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  /* ~1.5px grains: at baseFrequency 0.66 the noise survives the 28px panel blur
+     instead of dissolving into flat haze */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.66' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   mix-blend-mode: var(--grain-blend);
 }
 
@@ -236,14 +243,17 @@ h1, h2, h3, p { margin: 0; }
   overflow: hidden;
 }
 
+/* pointer highlight: only this radial, driven by --mx/--my from app.js (rAF
+   throttled, reset on pointerleave). 0.06 alpha is the ceiling; soft-light
+   keeps the light theme from stacking white on white. */
 .panel-sheen {
   position: absolute; inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(120% 68% at 14% -18%, rgb(var(--tint) / 0.30), transparent 58%),
-    radial-gradient(90% 60% at 96% 108%, rgba(140, 120, 255, 0.12), transparent 60%);
+  border-radius: inherit;
+  background: radial-gradient(var(--sheen-size) circle at var(--mx, 26%) var(--my, 4%),
+    rgb(var(--tint) / var(--sheen-alpha)), transparent 68%);
   opacity: var(--sheen-opacity);
-  mix-blend-mode: screen;
+  mix-blend-mode: soft-light;
 }
 
 /* ─────────────────────────────────────────────────────────────── sidebar ── */
@@ -263,9 +273,8 @@ h1, h2, h3, p { margin: 0; }
 
 .side-label {
   display: flex; align-items: center; gap: 8px;
-  font-size: 10.5px; font-weight: 600;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--dim);
   padding: 0 8px;
 }
@@ -301,23 +310,9 @@ h1, h2, h3, p { margin: 0; }
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-.nav-item:hover { background: rgb(var(--tint) / 0.055); color: var(--text); }
-.nav-item.on {
-  color: #fff;
-  background: linear-gradient(100deg, rgb(var(--tint) / 0.16), rgb(var(--tint) / 0.055));
-  box-shadow: inset 0 1px 0 rgb(var(--tint) / 0.20), 0 10px 24px -16px #000;
-}
-.nav-item.on::before {
-  content: "";
-  position: absolute; left: 0; top: 50%;
-  width: 3px; height: 18px;
-  margin-top: -9px;
-  border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 12px rgba(140, 120, 255, 0.9);
-}
-.nav-item.on .ic { opacity: 1; color: #dfe2ff; }
-.nav-item.on .badge { background: rgba(125, 140, 255, 0.28); color: #e7e9ff; }
+.nav-item:hover { background: var(--sel-hover); color: var(--text); }
+.nav-item.on .ic { opacity: 1; color: var(--text); }
+.nav-item.on .badge { background: var(--sel-bg); color: var(--text); }
 
 /* phones */
 .phone-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; min-height: 0; padding: 2px; }
@@ -456,12 +451,7 @@ h1, h2, h3, p { margin: 0; }
   color: var(--dim);
   transition: all 0.18s var(--ease);
 }
-.segmented button:hover { color: var(--text); }
-.segmented button.on {
-  color: #fff;
-  background: linear-gradient(160deg, rgb(var(--tint) / 0.24), rgb(var(--tint) / 0.10));
-  box-shadow: 0 2px 8px -4px #000, inset 0 1px 0 rgb(var(--tint) / 0.35);
-}
+.segmented button:hover { color: var(--text); background: var(--sel-hover); }
 
 .icon-btn {
   position: relative;
@@ -502,11 +492,9 @@ h1, h2, h3, p { margin: 0; }
   animation: convIn 0.4s var(--ease) both;
 }
 @keyframes convIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.conv:hover { background: rgb(var(--tint) / 0.05); }
+.conv:hover { background: var(--sel-hover); }
 .conv.on {
-  background: linear-gradient(120deg, rgb(var(--tint) / 0.13), rgb(var(--tint) / 0.045));
-  border-color: rgb(var(--tint) / 0.13);
-  box-shadow: inset 0 1px 0 rgb(var(--tint) / 0.16), 0 14px 30px -22px #000;
+  border-color: transparent;
 }
 
 .avatar {
@@ -709,7 +697,7 @@ h1, h2, h3, p { margin: 0; }
   overflow: hidden;
   background: var(--modal-bg);
   border: 1px solid rgb(var(--tint) / 0.13);
-  backdrop-filter: blur(40px) saturate(150%);
+  backdrop-filter: var(--panel-filter-strong);
   box-shadow:
     0 60px 130px -50px rgb(var(--shade) / 0.9),
     0 0 0 1px rgb(var(--tint) / 0.03),
@@ -763,7 +751,20 @@ h1, h2, h3, p { margin: 0; }
   font-size: 12.2px; color: var(--dim);
   transition: all 0.18s;
 }
-.tabs button.on { color: #fff; background: rgb(var(--tint) / 0.13); box-shadow: inset 0 1px 0 rgb(var(--tint) / 0.22); }
+
+/* One selection language for every level: a tinted glass capsule with a rim.
+   nav / conversation row / device chip / segmented / tabs share this exact
+   block, so their computed background is identical by construction. */
+.nav-item.on,
+.conv.on,
+.device-chip.on,
+.segmented button.on,
+.tabs button.on {
+  color: var(--text);
+  background: linear-gradient(120deg, var(--sel-bg), var(--sel-bg-2));
+  border-color: transparent;
+  box-shadow: var(--sel-rim);
+}
 
 .btn {
   height: 42px;
@@ -922,7 +923,7 @@ h1, h2, h3, p { margin: 0; }
   border-radius: 16px;
   background: var(--menu-bg);
   border: 1px solid rgb(var(--tint) / 0.13);
-  backdrop-filter: blur(30px) saturate(150%);
+  backdrop-filter: var(--panel-filter-strong);
   box-shadow: 0 30px 60px -26px rgba(0, 0, 0, 1), inset 0 1px 0 rgb(var(--tint) / 0.16);
   animation: ctxIn 0.18s var(--ease);
   transform-origin: top left;
@@ -1011,10 +1012,9 @@ h1, h2, h3, p { margin: 0; }
 .device-label {
   flex: none;
   padding: 0 6px 0 8px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--dim);
 }
 
@@ -1045,17 +1045,11 @@ h1, h2, h3, p { margin: 0; }
   cursor: pointer;
   flex: none;
 }
-.device-chip:hover { background: rgb(var(--tint) / 0.09); color: var(--text); transform: translateY(-1px); }
+.device-chip:hover { background: var(--sel-hover); color: var(--text); transform: translateY(-1px); }
 .device-chip .d-name { font-weight: 600; letter-spacing: 0.1px; }
 .device-chip .d-meta { font-size: 10.4px; color: var(--dim); font-variant-numeric: tabular-nums; }
-.device-chip.on {
-  color: #fff;
-  background: linear-gradient(135deg, var(--cta-1), var(--cta-2));
-  border-color: rgb(var(--tint) / 0.18);
-  box-shadow: 0 12px 26px -14px rgba(120, 110, 255, 0.95), inset 0 1px 0 rgb(255 255 255 / 0.38);
-}
-.device-chip.on .d-meta { color: #fff; }
-.device-chip.on .status-dot { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22); }
+.device-chip.on .d-meta { color: var(--muted); }
+.device-chip.on .status-dot { box-shadow: 0 0 0 3px rgb(var(--tint) / 0.10); }
 
 .device-chip .d-sync {
   width: 22px; height: 22px;
@@ -1134,7 +1128,7 @@ html[data-theme="light"] {
   --tint: 61 50 38;
   --shade: 120 98 68;
 
-  --bg: #f3eee3;
+  --bg: #e9e2d3;
   --text: #1f1a14;
   --muted: rgba(31, 26, 20, 0.70);
   --dim: rgba(31, 26, 20, 0.64);
@@ -1151,23 +1145,30 @@ html[data-theme="light"] {
   --focus: #4d5ad8;
 
   --blob-opacity: 0.5;
-  --grain-opacity: 0.045;
+  --grain-opacity: 0.055;
   --grain-blend: multiply;
-  --sheen-opacity: 0.30;
+  --sheen-opacity: 1;
 
-  --panel-filter: blur(40px) saturate(140%) brightness(1.03);
-  --panel-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.50) 48%, rgba(255, 255, 255, 0.68));
+  --panel-filter: blur(26px) saturate(140%);
+  --panel-filter-strong: blur(34px) saturate(145%);
+  /* one white layer only, one notch stronger to compensate the lighter blur */
+  --panel-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72) 52%, rgba(255, 255, 255, 0.80));
   --panel-shadow:
     0 24px 54px -36px rgba(105, 84, 56, 0.60),
     0 2px 6px -3px rgba(105, 84, 56, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(140, 116, 84, 0.06);
+    inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+    inset -1px -1px 0 rgba(140, 116, 84, 0.30),
+    inset 0 -6px 6px -6px rgba(140, 116, 84, 0.35);
+
+  --sel-bg: rgba(74, 60, 42, 0.12);
+  --sel-bg-2: rgba(74, 60, 42, 0.05);
+  --sel-rim: inset 0 0 0 1px rgba(74, 60, 42, 0.26);
+  --sel-hover: rgba(74, 60, 42, 0.07);
 
   --bg-image:
-    radial-gradient(980px 700px at 8% -10%, rgba(255, 209, 186, 0.62), transparent 62%),
-    radial-gradient(880px 640px at 96% 2%, rgba(204, 196, 255, 0.52), transparent 60%),
-    radial-gradient(1000px 720px at 56% 116%, rgba(183, 226, 214, 0.50), transparent 62%),
-    linear-gradient(160deg, #fbf7f0 0%, #f3ece1 48%, #f7f0e7 100%);
+    radial-gradient(1400px 900px at 6% -12%, rgba(255, 209, 186, 0.52), transparent 66%),
+    radial-gradient(320px 320px at 62% 18%, rgba(255, 196, 168, 0.34), transparent 68%),
+    linear-gradient(160deg, #f6f1e7 0%, #e9e2d3 48%, #efe8da 100%);
 
   --scrim:
     radial-gradient(120% 92% at 50% 44%, rgba(255, 255, 255, 0.28), rgba(250, 244, 233, 0.62) 82%),
@@ -1185,31 +1186,16 @@ html[data-theme="light"] {
 html[data-theme="dark"] { color-scheme: dark; }
 
 /* ambient colour for daylight */
-html[data-theme="light"] .b1 { background: radial-gradient(circle at 42% 42%, rgba(255, 176, 140, 0.85), transparent 70%); }
-html[data-theme="light"] .b2 { background: radial-gradient(circle at 50% 50%, rgba(178, 160, 255, 0.72), transparent 70%); }
-html[data-theme="light"] .b3 { background: radial-gradient(circle at 50% 50%, rgba(126, 214, 196, 0.62), transparent 70%); }
-html[data-theme="light"] .b4 { background: radial-gradient(circle at 50% 50%, rgba(255, 196, 168, 0.55), transparent 70%); }
+html[data-theme="light"] .b1 { background: radial-gradient(circle at 42% 42%, rgba(255, 176, 140, 0.68), transparent 70%); }
+html[data-theme="light"] .b2 { background: radial-gradient(circle at 50% 50%, rgba(178, 160, 255, 0.58), transparent 70%); }
 
 /* text that sits on coloured surfaces stays white; text on glass must darken */
 html[data-theme="light"] .toast { color: var(--text); }
 html[data-theme="light"] .toast.err { color: #b3203c; border-color: rgba(200, 60, 90, 0.35); }
 html[data-theme="light"] .toast.ok { border-color: rgba(20, 140, 96, 0.32); }
 
-html[data-theme="light"] .nav-item.on {
-  color: var(--text);
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.72));
-  box-shadow: 0 8px 20px -14px rgba(96, 76, 50, 0.8), inset 0 1px 0 #fff;
-}
 html[data-theme="light"] .nav-item.on .ic { color: var(--accent); }
-html[data-theme="light"] .nav-item.on .badge { background: rgba(95, 111, 245, 0.14); color: #4550c4; }
-
-html[data-theme="light"] .segmented button.on,
-html[data-theme="light"] .tabs button.on {
-  color: var(--text);
-  font-weight: 600;
-  background: linear-gradient(160deg, #ffffff, #fdfaf5);
-  box-shadow: 0 2px 8px -4px rgba(96, 76, 50, 0.7), inset 0 0 0 1px rgba(95, 111, 245, 0.22);
-}
+html[data-theme="light"] .nav-item.on .badge { background: var(--sel-bg); color: var(--text); }
 
 html[data-theme="light"] .icon-btn:hover,
 html[data-theme="light"] .mini-btn:hover,

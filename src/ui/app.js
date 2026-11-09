@@ -1313,6 +1313,41 @@ function bindEvents() {
   window.addEventListener('blur', closeContextMenu);
   window.addEventListener('resize', () => requestAnimationFrame(fitSidebar));
 
+  // Pointer highlight: one rAF-throttled listener writes --mx/--my on the panel
+  // under the cursor; pointerleave drops them so the sheen fades back to its
+  // default spot. Alpha lives in CSS (--sheen-alpha, 0.06).
+  let sheenRaf = 0;
+  let sheenPanel = null;
+  let sheenX = 0;
+  let sheenY = 0;
+  const panelOf = (target) => (target && target.closest ? target.closest('.panel') : null);
+  const resetSheen = (panel) => {
+    if (!panel) return;
+    panel.style.removeProperty('--mx');
+    panel.style.removeProperty('--my');
+  };
+  document.addEventListener('pointermove', (e) => {
+    const panel = panelOf(e.target);
+    if (!panel) return;
+    if (sheenPanel && sheenPanel !== panel) resetSheen(sheenPanel);
+    sheenPanel = panel;
+    sheenX = e.clientX;
+    sheenY = e.clientY;
+    if (sheenRaf) return;
+    sheenRaf = requestAnimationFrame(() => {
+      sheenRaf = 0;
+      if (!sheenPanel) return;
+      const r = sheenPanel.getBoundingClientRect();
+      sheenPanel.style.setProperty('--mx', `${Math.round(sheenX - r.left)}px`);
+      sheenPanel.style.setProperty('--my', `${Math.round(sheenY - r.top)}px`);
+    });
+  });
+  document.addEventListener('pointerleave', (e) => {
+    const panel = panelOf(e.target);
+    if (panel) resetSheen(panel);
+    if (panel && panel === sheenPanel) sheenPanel = null;
+  }, true);
+
   // Any render (list, thread, toast, modal) inserts Chinese copy; translate it
   // right after the mutation instead of remembering to call localizeDom at
   // every call site. childList only — our own text edits would cause a loop.
