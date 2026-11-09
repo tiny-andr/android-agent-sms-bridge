@@ -1,18 +1,16 @@
 node_modules/
+
+# build output
 dist/
+release/
+out/
+
+# local scratch data
 .shots/
 .demo-data/
+.tmp-*/
+__pycache__/
 *.log
 
-# local agent notes / scratch data
+# local agent notes
 .workbuddy/
-.tmp-*/
-__pycache__/
-
-# local agent notes / scratch data
-.workbuddy/
-.tmp-*/
-__pycache__/
-
-# electron-builder output
-release/
