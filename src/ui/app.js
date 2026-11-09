@@ -913,7 +913,7 @@ function openAbout() {
     </div>
     <div class="hint-line">
       <b>传输方式</b><br />
-      局域网内 <b>HTTPS</b>（手机端自签名证书）+ <b>HMAC-SHA256</b> 请求签名。首次配对会把手机证书固定下来
+      局域网内 HTTPS（手机端自签名证书）+ HMAC-SHA256 请求签名。首次配对会把手机证书固定下来
       （TOFU），之后每次请求都用这张证书校验，正文全程加密；配对弹窗里的指纹可与手机配对页逐段比对。
       签名另行保证「请求确实来自已配对客户端、内容未被篡改」。跨网络请走 Tailscale / WireGuard。
     </div>

@@ -568,10 +568,36 @@
     if (!CJK.test(raw)) return raw;
     const core = raw.trim();
     if (!core) return raw;
+
     const table = current === 'ja' ? JA : EN;
-    const translated = table[core];
-    if (!translated) return raw;
-    return raw.replace(core, translated);
+    const direct = table[core];
+    if (direct) return raw.replace(core, direct);
+
+    // Paragraphs written across several source lines carry newlines and
+    // indentation into the DOM; compare them with whitespace collapsed.
+    const norm = normalizeKey(raw);
+    if (!norm) return raw;
+    const flat = normalizedTable(current).get(norm);
+    return flat || raw;
+  }
+
+  function normalizeKey(text) {
+    // Chinese has no word spaces, so a line break in the source becomes a
+    // stray space in the DOM; drop whitespace entirely on both sides.
+    return String(text).replace(/\s+/g, '');
+  }
+
+  const normTables = new Map();
+  function normalizedTable(lang) {
+    if (normTables.has(lang)) return normTables.get(lang);
+    const table = lang === 'ja' ? JA : EN;
+    const map = new Map();
+    for (const [key, value] of Object.entries(table)) {
+      if (key.indexOf('{') !== -1) continue;
+      map.set(normalizeKey(key), value);
+    }
+    normTables.set(lang, map);
+    return map;
   }
 
   /**
