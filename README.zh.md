@@ -2,6 +2,9 @@
 
 [English](README.md) | **简体中文** | [日本語](README.ja.md)
 
+- **手机 App 下载** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases>
+- **Windows 版下载** → <https://github.com/tiny-andr/win-sms-bridge/releases/latest>
+
 [android-agent-sms-bridge](https://github.com/tiny-andr/android-agent-sms-bridge) 的 Windows 桌面客户端：把手机里已有的短信变成电脑上可浏览、可搜索、可自动同步的本地资料，不经过任何云端。
 
 ```

@@ -2,6 +2,9 @@
 
 **English** | [简体中文](README.zh.md) | [日本語](README.ja.md)
 
+- **Phone app download** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases>
+- **Windows build download** → <https://github.com/tiny-andr/win-sms-bridge/releases/latest>
+
 A Windows desktop client for [android-agent-sms-bridge](https://github.com/tiny-andr/android-agent-sms-bridge): browse, search and auto-sync the messages that already sit on your phone, without uploading anything to a cloud.
 
 ```

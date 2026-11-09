@@ -2,6 +2,9 @@
 
 [English](README.md) | [简体中文](README.zh.md) | **日本語**
 
+- **スマホアプリのダウンロード** → <https://github.com/tiny-andr/android-agent-sms-bridge/releases>
+- **Windows 版のダウンロード** → <https://github.com/tiny-andr/win-sms-bridge/releases/latest>
+
 [android-agent-sms-bridge](https://github.com/tiny-andr/android-agent-sms-bridge) の Windows デスクトップクライアントです。端末にある SMS を、クラウドを経由せずに PC で閲覧・検索・自動同期できます。
 
 ```
