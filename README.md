@@ -84,8 +84,8 @@ npm run icons        # regenerate the app icons (Python + Pillow)
 
 | Artefact | Use |
 |---|---|
-| `Windows-SMS-Bridge-Setup-1.0.0.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
-| `Windows SMS Bridge-1.0.0-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
+| `Windows-SMS-Bridge-Setup-1.0.1.exe` | Per-user installer: Start Menu and desktop shortcuts, appears in *Apps & features*, no admin rights needed |
+| `Windows SMS Bridge-1.0.1-win.zip` | Green/portable build: unzip anywhere and run the exe, nothing installed |
 
 Both keep all data in `%APPDATA%\Windows SMS Bridge\`, so switching between them keeps your pairings.
 
