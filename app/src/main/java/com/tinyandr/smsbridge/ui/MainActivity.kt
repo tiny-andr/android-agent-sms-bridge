@@ -4,8 +4,11 @@ import com.tinyandr.smsbridge.util.applySystemBarPadding
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -16,6 +19,7 @@ import androidx.core.os.LocaleListCompat
 import com.tinyandr.smsbridge.BuildConfig
 import com.tinyandr.smsbridge.R
 import com.tinyandr.smsbridge.SmsBridge
+import com.tinyandr.smsbridge.data.UpdateManager
 import com.tinyandr.smsbridge.databinding.ActivityMainBinding
 import com.tinyandr.smsbridge.service.BridgeService
 import java.net.Inet4Address
@@ -24,8 +28,11 @@ import java.net.NetworkInterface
 class MainActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityMainBinding
+    private lateinit var updater: UpdateManager
     private var suppressSwitch = false
     private var askedOnce = false
+    private var pendingRelease: UpdateManager.Release? = null
+    private var updating = false
 
     private val smsPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -47,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
         applySystemBarPadding(b.root)
+        updater = UpdateManager(this)
 
         b.swService.setOnCheckedChangeListener { _, checked ->
             if (suppressSwitch) return@setOnCheckedChangeListener
@@ -68,6 +76,76 @@ class MainActivity : AppCompatActivity() {
         b.btnSelfCheck.setOnClickListener { startActivity(Intent(this, SelfCheckActivity::class.java)) }
         b.btnAudit.setOnClickListener { startActivity(Intent(this, AuditActivity::class.java)) }
         b.btnLang.setOnClickListener { showLanguageDialog() }
+        b.btnUpdate.setOnClickListener { startUpdate() }
+    }
+
+    /** Silent check on foreground; [force] is the manual "check update" path. */
+    fun checkForUpdate(force: Boolean) {
+        if (updating) return
+        Thread {
+            val outcome = updater.check(force)
+            runOnUiThread {
+                val rel = outcome.release
+                if (rel != null) {
+                    pendingRelease = rel
+                    b.cardUpdate.visibility = View.VISIBLE
+                    b.tvUpdateTitle.text = getString(R.string.update_found, rel.version)
+                    val first = rel.notes.lineSequence().firstOrNull { it.isNotBlank() }?.trim()
+                    b.tvUpdateMsg.text = first ?: getString(R.string.update_size, rel.asset.size / 1024 / 1024)
+                    b.btnUpdate.text = getString(R.string.update_action)
+                    b.btnUpdate.isEnabled = true
+                } else if (force) {
+                    toast(outcome.error ?: getString(R.string.update_latest))
+                }
+            }
+        }.start()
+    }
+
+    private fun startUpdate() {
+        val rel = pendingRelease ?: return
+        if (updating) return
+        if (!updater.canInstall()) {
+            toast(getString(R.string.update_allow_install))
+            runCatching {
+                startActivity(
+                    Intent(
+                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+            }
+            return
+        }
+        updating = true
+        b.btnUpdate.isEnabled = false
+        b.tvUpdateMsg.text = getString(R.string.update_downloading, 0)
+        Thread {
+            try {
+                val file = updater.download(rel.asset) { done, total ->
+                    runOnUiThread {
+                        b.tvUpdateMsg.text = if (total > 0) {
+                            getString(R.string.update_downloading, (done * 100 / total).coerceIn(0, 100))
+                        } else {
+                            getString(R.string.update_downloaded_kb, done)
+                        }
+                    }
+                }
+                runOnUiThread {
+                    b.tvUpdateMsg.text = getString(R.string.update_opening_installer)
+                    runCatching { updater.install(file) }
+                        .onFailure { toast(getString(R.string.update_failed, it.message ?: "")) }
+                    updating = false
+                    b.btnUpdate.isEnabled = true
+                }
+            } catch (t: Throwable) {
+                runOnUiThread {
+                    toast(getString(R.string.update_failed, t.message ?: ""))
+                    b.btnUpdate.text = getString(R.string.update_retry)
+                    b.btnUpdate.isEnabled = true
+                    updating = false
+                }
+            }
+        }.start()
     }
 
     private fun showLanguageDialog() {
@@ -96,6 +174,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refresh()
+        val force = intent.getBooleanExtra(EXTRA_FORCE_CHECK, false)
+        if (force) intent.removeExtra(EXTRA_FORCE_CHECK)
+        checkForUpdate(force)
         // unless-stopped semantics: if the user did not press stop, the service
         // must be running. Re-issue START on every foreground, it is idempotent.
         if (SmsBridge.settings.serviceEnabled) {
@@ -184,4 +265,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
+    companion object {
+        /** Set when the settings page asked for a manual update check. */
+        const val EXTRA_FORCE_CHECK = "forceUpdateCheck"
+    }
 }

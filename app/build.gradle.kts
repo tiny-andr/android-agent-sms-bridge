@@ -1,8 +1,18 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+// Release signing lives outside git (keystore/release.p12 + release.properties,
+// generated once by tools/gen_signing.py). A stable signature is what lets an
+// installed copy take an update in place.
+val releaseKeystore = rootProject.file("keystore/release.p12")
+val releaseProps = rootProject.file("keystore/release.properties")
+val releaseSigning = Properties().apply {
+    if (releaseProps.exists()) releaseProps.inputStream().use { load(it) }
 }
 
 android {
@@ -13,18 +23,28 @@ android {
         applicationId = "com.tinyandr.smsbridge"
         minSdk = 34
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.1.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (releaseKeystore.exists()) {
+                storeFile = releaseKeystore
+                storePassword = releaseSigning.getProperty("storePassword")
+                keyAlias = releaseSigning.getProperty("keyAlias")
+                keyPassword = releaseSigning.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Signed with the local debug key on purpose: the key stays on the
-            // maintainer's machine (so nobody else can forge an update) and
-            // existing debug installs can be upgraded in place without losing
-            // the paired clients.
-            signingConfig = signingConfigs.getByName("debug")
+            // The private key never enters the repository. Losing it would mean
+            // every installed app has to be uninstalled before it can upgrade,
+            // so tools/gen_signing.py refuses to overwrite an existing one.
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -69,6 +89,24 @@ android {
     }
 
     tasks.named("preBuild") { dependsOn("checkTlsCertificate") }
+
+    // release.p12 is git-ignored. Fail loudly instead of silently shipping a
+    // release that cannot be installed over the previous one.
+    tasks.register("checkReleaseKeystore") {
+        doFirst {
+            if (!releaseKeystore.exists() || !releaseProps.exists()) {
+                throw GradleException(
+                    "Missing keystore/release.p12 or keystore/release.properties.\n" +
+                        "Run: python tools/gen_signing.py"
+                )
+            }
+        }
+    }
+
+    // preReleaseBuild is created by AGP after this block is evaluated.
+    tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+        dependsOn("checkReleaseKeystore")
+    }
 }
 
 dependencies {

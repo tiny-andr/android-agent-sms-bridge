@@ -41,6 +41,26 @@ depends on that file existing.
 The build fails with a clear message if the keystore is missing, so you cannot
 accidentally ship an app that crashes on service start.
 
+## Release signing (required for `assembleRelease`)
+
+Release builds are signed with `keystore/release.p12`, git-ignored. Generate it once:
+
+```bash
+python tools/gen_signing.py
+```
+
+That writes `keystore/release.p12` and `keystore/release.properties` with a random
+password. The signature is what lets an installed copy accept an update in place:
+if the key is lost or regenerated, every installed app must be uninstalled before
+it can take a newer build. Back both files up somewhere durable, never commit them,
+and note that `gen_signing.py` refuses to overwrite an existing key.
+
+`assembleDebug` does not need it — only release builds fail without it, with a
+message pointing at the generator.
+
+> Builds up to 1.0.3 were signed with the local debug key, so moving to 1.1.0+
+> requires one uninstall on any phone that already has an older release.
+
 ## Command line
 
 1. **JDK 17+** — e.g. [Temurin 21](https://adoptium.net/temurin/releases/). Set `JAVA_HOME`.

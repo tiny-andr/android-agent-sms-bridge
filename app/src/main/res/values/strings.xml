@@ -82,4 +82,16 @@
     <string name="lang_en">English</string>
     <string name="lang_zh">简体中文</string>
     <string name="lang_ja">日本語</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_found">Version %1$s is available</string>
+    <string name="update_size">Package %1$d MB</string>
+    <string name="update_action">Update</string>
+    <string name="update_retry">Retry</string>
+    <string name="update_downloading">Downloading %1$d%%</string>
+    <string name="update_downloaded_kb">Downloaded %1$d KB</string>
+    <string name="update_opening_installer">Opening the system installer…</string>
+    <string name="update_failed">Update failed: %1$s</string>
+    <string name="update_latest">You are on the latest version</string>
+    <string name="update_allow_install">Allow this app to install unknown apps, then try again</string>
 </resources>
