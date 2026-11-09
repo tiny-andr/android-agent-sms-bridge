@@ -103,39 +103,15 @@ function shortAddress(addr) {
   return a || '未知号码';
 }
 
-/** Deterministic pastel-to-saturated gradient per address. */
-function hslToRgb(h, s, l) {
-  const f = (n) => {
-    const k = (n + h / 30) % 12;
-    return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-  };
-  return [f(0), f(8), f(4)];
-}
-
-function relLum([r, g, b]) {
-  const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-}
-
-/**
- * The avatar fill is a two-stop gradient, so measure the midpoint where the
- * initials actually sit and pick the ink that clears 4.5:1 for that hue.
- * max(black, white) never falls below 4.58 on any backdrop, so one of the two
- * always passes — pure black is required for the crossover hues.
- */
-function avatarInk(h, h2) {
-  const a = hslToRgb(h, 0.72, 0.62);
-  const b = hslToRgb(h2, 0.68, 0.50);
-  const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-  return (relLum(mid) + 0.05) / 0.05 >= 4.5 ? 'var(--avatar-ink-dark)' : 'var(--avatar-ink-light)';
-}
-
+/** Deterministic light-tint gradient per address; the ink is always dark. */
 function avatarStyle(key) {
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
   const h2 = (h + 42) % 360;
-  return `background: linear-gradient(145deg, hsl(${h} 72% 62%), hsl(${h2} 68% 50%));`
-    + `color: ${avatarInk(h, h2)}; text-shadow: none;`;
+  // Both stops share one lightness band (66%) so the initials read the same
+  // anywhere on the tile; dark ink then clears 4.5:1 on every one of 360 hues.
+  return `background: linear-gradient(145deg, hsl(${h} 72% 66%), hsl(${h2} 68% 66%));`
+    + 'color: var(--avatar-ink-dark); text-shadow: none;';
 }
 
 function initials(addr) {
@@ -388,10 +364,6 @@ function renderList() {
   }
 
   emptyEl.hidden = true;
-  // roving tabindex: the list is one tab stop, the selected row carries it
-  const rovingKey = state.selected && convs.some((c) => c.key === state.selected)
-    ? state.selected
-    : convs[0].key;
   listEl.innerHTML = convs.map((c, i) => {
     const last = c.last;
     const phone = state.phones.find((p) => p.id === last.phoneId);
@@ -406,7 +378,7 @@ function renderList() {
     return `
       <div class="conv ${state.selected === c.key ? 'on' : ''} ${c.unread ? 'unread' : ''}"
            role="option" aria-selected="${state.selected === c.key}"
-           tabindex="${c.key === rovingKey ? 0 : -1}"
+           tabindex="-1"
            data-conv="${esc(c.key)}" style="animation-delay:${Math.min(i, 12) * 18}ms">
         <span class="avatar" style="${avatarStyle(c.key)}">${esc(initials(c.key))}</span>
         <div class="conv-body">
@@ -466,9 +438,16 @@ function renderThread() {
   requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; });
 }
 
-/** Select a conversation from either a pointer click or the keyboard. */
-function openConversation(key) {
+/** Move the roving selection without opening the thread (no markSeen). */
+function selectConversation(key) {
   state.selected = key;
+  renderList();
+  renderThread();
+}
+
+/** Open a conversation from a pointer click or an Enter / Space / → press. */
+function openConversation(key) {
+  selectConversation(key);
   window.sms.markSeen(key).then((n) => {
     if (!n) return;
     for (const m of state.messages) if (m.address === key) m.seen = true;
@@ -476,8 +455,6 @@ function openConversation(key) {
     renderList();
     renderStatus();
   }).catch(() => {});
-  renderList();
-  renderThread();
 }
 
 function renderMeta() {
@@ -548,14 +525,17 @@ function startLocalizer() {
 
 let modalCloser = null;
 let modalReturnFocus = null;
+let modalBuild = null;
 
 const FOCUSABLE = 'button:not([disabled]):not([tabindex="-1"]), [href], input:not([disabled]), '
   + 'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-function openModal(html, { onMount, wide = false } = {}) {
+function openModal(render, { onMount, wide = false } = {}) {
   const layer = $('#modalLayer');
   const card = $('#modalCard');
   const opener = document.activeElement;
+  const html = typeof render === 'function' ? render() : render;
+  modalBuild = () => openModal(render, { onMount, wide });
   card.className = `modal glass${wide ? ' wide' : ''}`;
   // The scrollable body and the action footer are separate boxes, so the last
   // form row can never be covered by the buttons.
@@ -569,6 +549,7 @@ function openModal(html, { onMount, wide = false } = {}) {
     layer.hidden = true;
     card.innerHTML = '';
     modalCloser = null;
+    modalBuild = null;
     const back = modalReturnFocus;
     modalReturnFocus = null;
     if (back && document.contains(back)) back.focus();
@@ -578,6 +559,36 @@ function openModal(html, { onMount, wide = false } = {}) {
   trapFocus(card);
   const first = card.querySelector(FOCUSABLE);
   if (first) first.focus();
+}
+
+/**
+ * Re-render the open dialog in the current language. Strings produced by t()
+ * at build time cannot be retranslated by the DOM walker, so the dialog has to
+ * be rebuilt from its builder.
+ */
+function rebuildModal() {
+  const layer = $('#modalLayer');
+  if (!layer || layer.hidden || !modalBuild) return;
+  const card = $('#modalCard');
+  const body = card.querySelector('.modal-body');
+  const scroll = body ? body.scrollTop : 0;
+  const active = document.activeElement;
+  const activeId = active && active.id ? active.id : '';
+  const activeCls = active && typeof active.className === 'string' ? active.className.trim() : '';
+  const build = modalBuild;
+  const ret = modalReturnFocus;
+  layer.hidden = true;
+  card.innerHTML = '';
+  modalCloser = null;
+  modalBuild = null;
+  build();
+  modalReturnFocus = ret;
+  const body2 = card.querySelector('.modal-body');
+  if (body2) body2.scrollTop = scroll;
+  let next = null;
+  if (activeId) next = card.querySelector(`#${activeId}`);
+  if (!next && activeCls) next = card.querySelector(`.${activeCls.split(/\s+/)[0]}`);
+  if (next && typeof next.focus === 'function') next.focus();
 }
 
 /** Keep Tab inside the dialog; the dialog itself closes on Esc (global keymap). */
@@ -673,7 +684,7 @@ function openAddPhone(opts = {}) {
   const lastCodeHint = repairing
     ? `这台手机的旧密钥已失效（换证书后会这样）。在手机上重新生成配对码，配对后会沿用现有的短信缓存。`
     : '配对成功后，这台电脑会获得一枚独立密钥，手机的配对列表里可以看到并随时吊销它。';
-  openModal(`
+  openModal(() => `
     <div class="modal-title">
       <span class="logo" style="width:34px;height:34px;border-radius:12px;">
         <svg viewBox="0 0 18 18" width="17" height="17" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round">
@@ -727,7 +738,7 @@ function openAddPhone(opts = {}) {
         <label>token</label>
         <input class="input" id="iToken" placeholder="base64url token" spellcheck="false" />
       </div>
-      <div class="hint-line">可从已有的 .smsbridge.json 复制 base_url / client_id / token，凭据会用 Windows DPAPI 加密后保存在本机。</div>
+      <div class="hint-line">${t('可从已有的 .smsbridge.json 复制 base_url / client_id / token，凭据会用 Windows DPAPI 加密后保存在本机。')}</div>
     </div>
 
     <div class="modal-actions">
@@ -833,7 +844,7 @@ function openAddPhone(opts = {}) {
 function openSettings() {
   const s = state.settings;
   const opt = (v, cur, label) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${label}</option>`;
-  openModal(`
+  openModal(() => `
     <div class="modal-title">
       <div>
         <h3>设置</h3>
@@ -864,9 +875,9 @@ function openSettings() {
         <span>整体放大或缩小界面（文字、间距一起变），觉得字小就调大</span>
       </div>
       <div class="stepper" id="setScale">
-        <button data-scale="-5" title="缩小 5%">A−</button>
+        <button data-scale="-5" title="${t('缩小 5%')}">A−</button>
         <span id="scaleValue">${Math.round(scaleOf(s) * 100)}%</span>
-        <button data-scale="5" title="放大 5%">A+</button>
+        <button data-scale="5" title="${t('放大 5%')}">A+</button>
       </div>
     </div>
     <div class="setting-row">
@@ -1008,7 +1019,7 @@ function openAbout() {
        <span class="lo-note">本程序 · MIT</span>`
     : `<span class="lo-pending">本程序仓库：GitHub 推送后在此显示</span>`;
 
-  openModal(`
+  openModal(() => `
     <div class="modal-title">
       <span class="logo" style="width:36px;height:36px;border-radius:12px;">${brandMark()}</span>
       <div>
@@ -1106,6 +1117,7 @@ function applyLanguage() {
   setLang(lang);
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
   document.title = t('Windows SMS Bridge · 短信桥');
+  rebuildModal();
   relocalizeDom(document.body);
   renderAll();
 }
@@ -1198,14 +1210,19 @@ function bindEvents() {
     const rows = [...convList.querySelectorAll('[data-conv]')];
     if (!rows.length) return;
     const cur = rows.findIndex((r) => r.dataset.conv === state.selected);
+    const focusRow = (key) => {
+      // renderList replaced the nodes; put focus back on the same row
+      const again = [...convList.querySelectorAll('[data-conv]')]
+        .find((r) => r.dataset.conv === key);
+      if (again) again.focus();
+    };
     const move = (i) => {
       const row = rows[Math.max(0, Math.min(rows.length - 1, i))];
       if (!row) return;
-      openConversation(row.dataset.conv);
-      // renderList replaced the nodes; put focus back on the same row
-      const again = [...convList.querySelectorAll('[data-conv]')]
-        .find((r) => r.dataset.conv === row.dataset.conv);
-      if (again) again.focus();
+      // arrows only move the roving focus/selection; opening a thread (and
+      // marking it seen) stays on Enter / Space / →
+      selectConversation(row.dataset.conv);
+      focusRow(row.dataset.conv);
     };
     switch (e.key) {
       case 'ArrowDown': e.preventDefault(); move(cur + 1); break;
@@ -1219,9 +1236,7 @@ function bindEvents() {
         if (!row) return;
         e.preventDefault();
         openConversation(row.dataset.conv);
-        const again = [...convList.querySelectorAll('[data-conv]')]
-          .find((r) => r.dataset.conv === row.dataset.conv);
-        if (again) again.focus();
+        focusRow(row.dataset.conv);
         break;
       }
       default:
@@ -1349,11 +1364,11 @@ async function init() {
   // onboarding when there is nothing paired yet
   if (!state.phones.length) {
     setTimeout(() => {
-      openModal(`
+      openModal(() => `
         <div class="onboard">
           <div class="orb-illustration"><span></span><span></span><span></span></div>
           <div>
-            <h3 style="font-size:18px;font-weight:650;letter-spacing:.2px;">欢迎使用 Windows SMS Bridge</h3>
+            <h3 style="font-size:18px;font-weight:650;letter-spacing:.2px;">${t('欢迎使用 Windows SMS Bridge')}</h3>
             <p style="margin-top:8px;font-size:12.6px;color:var(--dim);line-height:1.9;">
               把这台电脑和手机连起来，短信会自动同步到本地。<br />支持同时配对多台手机。
             </p>
@@ -1364,8 +1379,8 @@ async function init() {
             <div class="step"><i>3</i><div>打开手机的 <b>配对</b> 页面，把 6 位配对码填进来</div></div>
           </div>
           <div class="modal-actions" style="width:100%;justify-content:center;">
-            <button class="btn ghost" data-close>稍后再说</button>
-            <button class="btn primary" id="obGo" style="flex:1;max-width:220px;">开始配对</button>
+            <button class="btn ghost" data-close>${t('稍后再说')}</button>
+            <button class="btn primary" id="obGo" style="flex:1;max-width:220px;">${t('开始配对')}</button>
           </div>
         </div>
       `, {
@@ -1379,5 +1394,5 @@ async function init() {
 
 init().catch((err) => {
   console.error(err);
-  document.body.innerHTML = `<div style="padding:40px;font-family:sans-serif;color:#fff;">启动失败：${esc(err.message)}</div>`;
+  document.body.innerHTML = `<div style="padding:40px;font-family:sans-serif;color:var(--text);">${esc(t('启动失败：{msg}', { msg: err.message }))}</div>`;
 });

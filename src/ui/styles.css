@@ -25,9 +25,8 @@
   --cta-1: #5c69d6;
   --cta-2: #865ad6;
   --focus: #a7b1ff;
-  /* avatar initials pick one of these per hue in app.js avatarStyle() */
+  /* avatar initials are always dark ink on the light fill (see avatarStyle) */
   --avatar-ink-dark: #000000;
-  --avatar-ink-light: #ffffff;
 
   --r-xl: 28px;
   --r-lg: 22px;
@@ -1055,7 +1054,7 @@ h1, h2, h3, p { margin: 0; }
   border-color: rgb(var(--tint) / 0.18);
   box-shadow: 0 12px 26px -14px rgba(120, 110, 255, 0.95), inset 0 1px 0 rgb(255 255 255 / 0.38);
 }
-.device-chip.on .d-meta { color: rgba(255, 255, 255, 0.92); }
+.device-chip.on .d-meta { color: #fff; }
 .device-chip.on .status-dot { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22); }
 
 .device-chip .d-sync {
@@ -1325,7 +1324,7 @@ html[data-theme="light"] .device-add { border-color: rgba(74, 60, 42, 0.20); }
   color: var(--dim);
   word-break: break-all;
 }
-html[data-theme="light"] .hint-line .fp { color: rgba(31, 26, 20, 0.55); }
+html[data-theme="light"] .hint-line .fp { color: var(--dim); }
 .input[readonly] { color: var(--dim); background: rgb(var(--tint) / 0.03); }
 
 /* ─────────────────────────────────────────────────────── display scale ─── */
