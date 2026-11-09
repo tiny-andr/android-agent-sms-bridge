@@ -23,8 +23,8 @@ android {
         applicationId = "com.tinyandr.smsbridge"
         minSdk = 34
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.1.0"
+        versionCode = 6
+        versionName = "2.0.0"
     }
 
     signingConfigs {
