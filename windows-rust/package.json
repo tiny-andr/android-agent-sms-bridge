@@ -1,7 +1,7 @@
 {
   "name": "windows-sms-bridge-tauri",
   "productName": "Windows SMS Bridge",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Windows client for the Android SMS bridge (短信桥) — Tauri 2 rewrite",
   "author": "Windows SMS Bridge",
   "license": "MIT",

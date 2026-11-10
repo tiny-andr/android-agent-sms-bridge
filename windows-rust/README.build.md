@@ -26,7 +26,7 @@ npm run dist                 # = tauri build：编译 + 打 NSIS 安装器
 | 产物 | 路径 |
 | --- | --- |
 | 可执行文件 | `target\release\Windows SMS Bridge.exe`（`mainBinaryName` 决定文件名） |
-| NSIS 安装器 | `target\release\bundle\nsis\Windows SMS Bridge_2.1.0_x64-setup.exe` |
+| NSIS 安装器 | `target\release\bundle\nsis\Windows SMS Bridge_<ver>_x64-setup.exe` |
 | 打包中间文件 | `target\release\bundle\nsis\`（`installer.nsi`、图标、语言文件等） |
 
 ## 安装器命名（重要）
