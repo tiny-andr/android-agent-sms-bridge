@@ -17,6 +17,11 @@ data class SmsEvent(
 /**
  * Incremental event queue fed by [com.tinyandr.smsbridge.service.SmsWatcher].
  * Keeps the last 500 events so a paired agent can pull "what is new" with since_seq.
+ *
+ * Two independent cursors live here. [KEY_SEEN] drives the event queue that the
+ * HTTP API serves; [KEY_PUSH_SEEN] drives the proactive push. They must not be
+ * shared: a paired agent polling /v1/events would otherwise advance the cursor
+ * past a message before the notifier ever looked at it.
  */
 class EventStore(context: Context, private val repo: SmsRepository) {
 
@@ -24,23 +29,29 @@ class EventStore(context: Context, private val repo: SmsRepository) {
         .getSharedPreferences("smsbridge_events", Context.MODE_PRIVATE)
 
     init {
-        if (!sp.contains("lastSeenId")) {
+        if (!sp.contains(KEY_SEEN)) {
             // First ever run: treat current inbox head as baseline, do not replay history.
             sp.edit()
-                .putLong("lastSeenId", runCatching { repo.maxId() }.getOrDefault(0L))
-                .putLong("nextSeq", 1L)
+                .putLong(KEY_SEEN, runCatching { repo.maxId() }.getOrDefault(0L))
+                .putLong(KEY_NEXT_SEQ, 1L)
                 .apply()
         }
     }
 
     /** Poll the SMS provider for anything newer than lastSeenId and enqueue events. */
-    @Synchronized
-    fun poll(): Int {
-        val last = sp.getLong("lastSeenId", 0L)
-        val fresh = runCatching { repo.newerThan(last, 50) }.getOrDefault(emptyList())
-        if (fresh.isEmpty()) return 0
+    fun poll(): Int = pollDetailed().size
 
-        var seq = sp.getLong("nextSeq", 1L)
+    /**
+     * Same as [poll], but hands the full messages back. Returns an empty list when
+     * nothing is new.
+     */
+    @Synchronized
+    fun pollDetailed(): List<SmsMessage> {
+        val last = sp.getLong(KEY_SEEN, 0L)
+        val fresh = runCatching { repo.newerThan(last, 50) }.getOrDefault(emptyList())
+        if (fresh.isEmpty()) return emptyList()
+
+        var seq = sp.getLong(KEY_NEXT_SEQ, 1L)
         val events = loadEvents().toMutableList()
         var maxId = last
         for (m in fresh) {
@@ -59,8 +70,44 @@ class EventStore(context: Context, private val repo: SmsRepository) {
         }
         while (events.size > MAX_EVENTS) events.removeAt(0)
         saveEvents(events)
-        sp.edit().putLong("lastSeenId", maxId).putLong("nextSeq", seq).apply()
-        return fresh.size
+        sp.edit().putLong(KEY_SEEN, maxId).putLong(KEY_NEXT_SEQ, seq).apply()
+        return fresh
+    }
+
+    // ------------------------------------------------------------ push stream
+
+    /**
+     * Messages that still have to be pushed, oldest first.
+     *
+     * The cursor is committed to disk *before* this returns, and therefore before
+     * the caller starts any network call. A process that is killed mid-push can
+     * lose that one message, but a restart can never replay it — a duplicate card
+     * on every reboot would be far worse than a missed one.
+     */
+    @Synchronized
+    fun pendingPush(): List<SmsMessage> {
+        val last = sp.getLong(KEY_PUSH_SEEN, -1L)
+        if (last < 0L) {
+            // Notifications just became active: start where the API stream stands
+            // so the existing inbox is not replayed as a wall of cards.
+            sp.edit().putLong(KEY_PUSH_SEEN, sp.getLong(KEY_SEEN, 0L)).commit()
+            return emptyList()
+        }
+        val fresh = runCatching { repo.newerThan(last, 50) }.getOrDefault(emptyList())
+        if (fresh.isEmpty()) return emptyList()
+        sp.edit().putLong(KEY_PUSH_SEEN, fresh.maxOf { it.id }).commit()
+        return fresh
+    }
+
+    /**
+     * Move the push cursor to the newest row without pushing anything. Used when
+     * the periodic scan is off and the process may have been dead for hours: the
+     * alternative is a burst of stale cards on the next start.
+     */
+    @Synchronized
+    fun establishPushBaseline() {
+        val max = runCatching { repo.maxId() }.getOrDefault(0L)
+        sp.edit().putLong(KEY_PUSH_SEEN, max).commit()
     }
 
     @Synchronized
@@ -122,5 +169,8 @@ class EventStore(context: Context, private val repo: SmsRepository) {
 
     companion object {
         private const val MAX_EVENTS = 500
+        private const val KEY_SEEN = "lastSeenId"
+        private const val KEY_PUSH_SEEN = "pushSeenId"
+        private const val KEY_NEXT_SEQ = "nextSeq"
     }
 }

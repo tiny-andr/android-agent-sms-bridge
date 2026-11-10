@@ -94,4 +94,54 @@
     <string name="update_failed">更新に失敗しました：%1$s</string>
     <string name="update_latest">最新バージョンです</string>
     <string name="update_allow_install">このアプリに不明なアプリのインストールを許可してから再試行してください</string>
+
+    <string name="btn_notify">プッシュ通知</string>
+    <string name="notify_title">プッシュ通知</string>
+    <string name="notify_subtitle">新着 SMS を Telegram または Feishu にプッシュします</string>
+    <string name="notify_status_off">オフ</string>
+    <string name="notify_status_on">%1$d チャンネルがオン</string>
+
+    <string name="notify_section_trigger">トリガー</string>
+    <string name="notify_event_title">新着 SMS を即時配信</string>
+    <string name="notify_scan_title">定期スキャン</string>
+    <string name="notify_scan_desc">プロセス凍結中に見逃したメッセージを補完します</string>
+    <string name="notify_interval_label">スキャン間隔</string>
+    <string name="notify_interval_value">%1$d 分</string>
+    <string name="notify_service_note">プッシュはバックグラウンドサービス内で実行されます。サービスをオンにしておかないと送信されません。</string>
+
+    <string name="notify_section_filter">キーワードフィルタ</string>
+    <string name="notify_keywords_hint">キーワード（カンマ区切り）</string>
+    <string name="notify_keywords_help">空 = すべてプッシュ。それ以外は送信元または本文にいずれかのキーワードを含む場合にプッシュします。</string>
+
+    <string name="notify_section_telegram">Telegram</string>
+    <string name="notify_tg_enable">Telegram を有効化</string>
+    <string name="notify_tg_help">1) Telegram でボットに任意のメッセージを送ります。2) 「ID を取得」をタップ。ボットに必要なのはこれだけです。</string>
+    <string name="notify_tg_token_hint">Bot token</string>
+    <string name="notify_tg_chat_hint">Chat ID</string>
+    <string name="notify_tg_fetch">ID を取得</string>
+    <string name="notify_tg_fetch_ok">Chat ID: %1$s</string>
+    <string name="notify_tg_fetch_need_message">メッセージがまだありません — 先にボットへ送信してください</string>
+    <string name="notify_tg_fetch_fail">失敗しました：%1$s</string>
+
+    <string name="notify_section_feishu">Feishu webhook</string>
+    <string name="notify_fs_enable">Feishu を有効化</string>
+    <string name="notify_fs_hook_hint">Webhook URL</string>
+    <string name="notify_fs_secret_hint">署名シークレット（オフなら空欄）</string>
+    <string name="notify_fs_help">ボット設定から webhook URL をコピーします。署名検証がオンの場合のみシークレットを入力してください。</string>
+
+    <string name="notify_test">テストメッセージを送信</string>
+    <string name="notify_test_running">送信中…</string>
+    <string name="notify_test_ok">送信しました</string>
+    <string name="notify_test_fail">失敗しました：%1$s</string>
+    <string name="notify_save">保存</string>
+    <string name="notify_saved">保存しました</string>
+    <string name="notify_need_trigger">トリガーを1つ以上選択してください</string>
+    <string name="notify_need_channel">チャンネルを有効にして認証情報を入力してください</string>
+    <string name="notify_need_token">先にボットの認証情報を入力してください</string>
+
+    <string name="msg_from">送信元</string>
+    <string name="msg_time">受信時刻</string>
+    <string name="msg_sim">SIM</string>
+    <string name="msg_body">内容</string>
+    <string name="notify_test_body">SMSブリッジからのテストメッセージ</string>
 </resources>

@@ -94,4 +94,54 @@
     <string name="update_failed">更新失败：%1$s</string>
     <string name="update_latest">已是最新版本</string>
     <string name="update_allow_install">请允许本应用安装未知应用后再试</string>
+
+    <string name="btn_notify">主动通知</string>
+    <string name="notify_title">主动通知</string>
+    <string name="notify_subtitle">把新短信推送到 Telegram 或飞书</string>
+    <string name="notify_status_off">关闭</string>
+    <string name="notify_status_on">已开启 %1$d 个渠道</string>
+
+    <string name="notify_section_trigger">触发方式</string>
+    <string name="notify_event_title">新短信，立即推送</string>
+    <string name="notify_scan_title">间隔扫描</string>
+    <string name="notify_scan_desc">补抓进程被冻结期间漏掉的短信</string>
+    <string name="notify_interval_label">扫描间隔</string>
+    <string name="notify_interval_value">%1$d 分钟</string>
+    <string name="notify_service_note">推送在后台服务里执行。服务要保持开启，否则不会发送。</string>
+
+    <string name="notify_section_filter">关键词过滤</string>
+    <string name="notify_keywords_hint">关键词，逗号分隔</string>
+    <string name="notify_keywords_help">留空 = 全部推送。否则发件人或正文包含任一关键词时才推送。</string>
+
+    <string name="notify_section_telegram">Telegram</string>
+    <string name="notify_tg_enable">启用 Telegram</string>
+    <string name="notify_tg_help">1) 在 Telegram 里给机器人发任意一条消息。2) 点「获取 ID」。机器人只需要这些。</string>
+    <string name="notify_tg_token_hint">Bot token</string>
+    <string name="notify_tg_chat_hint">Chat ID</string>
+    <string name="notify_tg_fetch">获取 ID</string>
+    <string name="notify_tg_fetch_ok">Chat ID: %1$s</string>
+    <string name="notify_tg_fetch_need_message">还没收到消息 — 先给机器人发一条</string>
+    <string name="notify_tg_fetch_fail">失败：%1$s</string>
+
+    <string name="notify_section_feishu">飞书 webhook</string>
+    <string name="notify_fs_enable">启用飞书</string>
+    <string name="notify_fs_hook_hint">Webhook URL</string>
+    <string name="notify_fs_secret_hint">签名密钥（未开启可留空）</string>
+    <string name="notify_fs_help">在机器人设置里复制 webhook URL。只有开启签名校验时才需要填密钥。</string>
+
+    <string name="notify_test">发送测试消息</string>
+    <string name="notify_test_running">正在发送…</string>
+    <string name="notify_test_ok">已送达</string>
+    <string name="notify_test_fail">失败：%1$s</string>
+    <string name="notify_save">保存</string>
+    <string name="notify_saved">已保存</string>
+    <string name="notify_need_trigger">至少选择一个触发方式</string>
+    <string name="notify_need_channel">启用一个渠道并填写凭据</string>
+    <string name="notify_need_token">先填写 Bot 凭据</string>
+
+    <string name="msg_from">来信号码</string>
+    <string name="msg_time">接收时间</string>
+    <string name="msg_sim">接收卡号</string>
+    <string name="msg_body">内容</string>
+    <string name="notify_test_body">来自短信桥的测试消息</string>
 </resources>

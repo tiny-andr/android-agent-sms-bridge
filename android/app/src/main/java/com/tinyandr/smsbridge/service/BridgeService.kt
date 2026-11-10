@@ -19,6 +19,7 @@ import androidx.core.app.NotificationCompat
 import com.tinyandr.smsbridge.SmsBridge
 import com.tinyandr.smsbridge.R
 import com.tinyandr.smsbridge.http.BridgeServer
+import com.tinyandr.smsbridge.notify.ProactiveNotifier
 import com.tinyandr.smsbridge.ui.MainActivity
 
 class BridgeService : Service() {
@@ -51,6 +52,7 @@ class BridgeService : Service() {
                 if (SmsBridge.settings.holdLocks) acquireLocks() else releaseLocks()
                 startServer()
                 startWatcher()
+                startScanner()
                 if (SmsBridge.settings.heartbeatEnabled) startHeartbeat() else stopHeartbeat()
                 KeepAliveScheduler.schedule(this)
                 running = true
@@ -72,6 +74,7 @@ class BridgeService : Service() {
 
     override fun onDestroy() {
         stopHeartbeat()
+        stopScanner()
         releaseLocks()
         stopServer()
         stopWatcher()
@@ -227,6 +230,66 @@ class BridgeService : Service() {
     private fun stopWatcher() {
         watcher?.stop()
         watcher = null
+    }
+
+    // ------------------------------------------------------ proactive scanner
+    //
+    // The ContentObserver is the primary trigger and fires within a second, but a
+    // vendor freezer or a killed process silently drops it. This timer is the
+    // safety net: it replays whatever landed since the last pass. It only runs
+    // while the service is alive, which is fine — nothing could be pushed then.
+
+    private fun startScanner() {
+        uiHandler.removeCallbacks(scanTick)
+        val s = SmsBridge.settings
+        if (!s.notifyScanEnabled) return
+        val intervalMs = s.notifyScanIntervalMin * 60_000L
+        // Service start is itself a catch-up: the process may have been gone for
+        // a while, so push what arrived inside one interval and silently treat
+        // anything older as already seen.
+        Thread {
+            runCatching { scan(intervalMs) }
+                .onFailure { Log.w(TAG, "initial scan failed", it) }
+        }.start()
+        uiHandler.postDelayed(scanTick, intervalMs)
+    }
+
+    private fun stopScanner() {
+        uiHandler.removeCallbacks(scanTick)
+    }
+
+    private val scanTick = object : Runnable {
+        override fun run() {
+            uiHandler.removeCallbacks(this)
+            tickScan()
+        }
+    }
+
+    private fun tickScan() {
+        val s = SmsBridge.settings
+        if (!s.notifyScanEnabled) return
+        val intervalMs = s.notifyScanIntervalMin * 60_000L
+        Thread {
+            runCatching { scan(intervalMs) }
+                .onFailure { Log.w(TAG, "scan failed", it) }
+        }.start()
+        uiHandler.postDelayed(scanTick, intervalMs)
+    }
+
+    /**
+     * Advances the event cursor past everything that is new, but only pushes
+     * messages that arrived within [windowMs]. Without the window a phone that
+     * was off for two days would greet the user with 50 cards at once.
+     */
+    private fun scan(windowMs: Long) {
+        val fresh = SmsBridge.events.pendingPush()
+        // The API event stream has its own cursor; keep it current as well.
+        runCatching { SmsBridge.events.poll() }
+        if (fresh.isEmpty()) return
+        val cutoff = System.currentTimeMillis() - windowMs
+        val recent = fresh.filter { it.date >= cutoff }
+        Log.i(TAG, "scan: ${fresh.size} new, ${recent.size} inside ${windowMs / 60_000} min")
+        if (recent.isNotEmpty()) ProactiveNotifier.onNewMessages(this, recent)
     }
 
     private fun stopSelfSafely() {

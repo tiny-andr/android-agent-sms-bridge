@@ -38,6 +38,7 @@
 
         <activity android:name=".ui.PairActivity" android:exported="false" />
         <activity android:name=".ui.SettingsActivity" android:exported="false" />
+        <activity android:name=".ui.NotifyActivity" android:exported="false" />
         <activity android:name=".ui.SelfCheckActivity" android:exported="false" />
         <activity android:name=".ui.AuditActivity" android:exported="false" />
 

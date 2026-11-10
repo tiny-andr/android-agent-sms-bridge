@@ -3,7 +3,8 @@
 **English** | [简体中文](README.zh.md) | [日本語](README.ja.md)
 
 Turn your phone's SMS into a local HTTP API that agents can query. The SMS database is only
-touched when a request arrives — there is no polling loop.
+touched when a request arrives or a new message lands — no polling loop, unless you switch on
+the optional push.
 
 Two clients live in this repository:
 
@@ -12,8 +13,8 @@ Two clients live in this repository:
 | [android/](android/) | Phone app: serves the SMS API over HTTPS |
 | [windows/](windows/) | Desktop client: syncs and reads from a paired phone |
 
-Releases carry both artefacts (`SmsBridge-x.y.z.apk`, `Windows-SMS-Bridge-Setup-x.y.z.exe`),
-and both apps update themselves from this repository's releases.
+Each release carries the APK, plus `Windows-SMS-Bridge-Setup-x.y.z.exe` whenever the desktop
+client changes. Both apps update themselves from this repository's releases.
 
 ```
 ┌─────────────┐    HTTP + HMAC-SHA256    ┌──────────────┐
@@ -70,6 +71,7 @@ There is also a 20-second heartbeat switch in Settings (on by default) as a fall
 - **Structured queries**: filter by days / address / SIM slot (dual SIM) / keyword / inbox or sent, returns JSON
 - **OTP mode**: `purpose=otp` returns only the verification code plus a masked body
 - **Incremental events**: a ContentObserver queues new SMS in real time; agents pull with `since_seq`, no duplicates
+- **Push to your chat**: forwards new SMS to Telegram or Feishu as four lines (sender, time, SIM, body), with an optional keyword filter and a periodic scan that catches what the observer missed
 - **Always on**: `specialUse` foreground service + two watchdogs + boot start; keeps answering with the screen locked or the app swiped away
 - **Pairing & audit**: one-time 6-digit code, revocable clients, request audit log, rate limiting
 - **Read-only**: never sends SMS, never writes the SMS database, never copies messages locally

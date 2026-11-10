@@ -23,8 +23,8 @@ android {
         applicationId = "com.tinyandr.smsbridge"
         minSdk = 34
         targetSdk = 36
-        versionCode = 7
-        versionName = "2.1.0"
+        versionCode = 8
+        versionName = "2.2.0"
     }
 
     signingConfigs {
@@ -39,6 +39,12 @@ android {
     }
 
     buildTypes {
+        // Installed next to the released app so a debug build can be driven over
+        // adb (credentials injected with run-as) without touching the real one.
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = false
             // The private key never enters the repository. Losing it would mean

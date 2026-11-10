@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
 
         b.btnPair.setOnClickListener { startActivity(Intent(this, PairActivity::class.java)) }
         b.btnSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+        b.btnNotify.setOnClickListener { startActivity(Intent(this, NotifyActivity::class.java)) }
         b.btnSelfCheck.setOnClickListener { startActivity(Intent(this, SelfCheckActivity::class.java)) }
         b.btnAudit.setOnClickListener { startActivity(Intent(this, AuditActivity::class.java)) }
         b.btnLang.setOnClickListener { showLanguageDialog() }
@@ -211,6 +212,15 @@ class MainActivity : AppCompatActivity() {
         }
         b.tvIpHint.text =
             "v${BuildConfig.VERSION_NAME} · ${getString(R.string.ip_hint)}: ${localIp()}"
+
+        val s = SmsBridge.settings
+        val channels = s.notifyChannelCount
+        val status = if (s.notifyAnyTrigger && channels > 0) {
+            getString(R.string.notify_status_on, channels)
+        } else {
+            getString(R.string.notify_status_off)
+        }
+        b.btnNotify.text = "${getString(R.string.btn_notify)} · $status"
 
         suppressSwitch = true
         b.swService.isChecked = running

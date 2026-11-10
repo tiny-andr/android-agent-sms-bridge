@@ -2,7 +2,8 @@
 
 [English](README.md) | **简体中文** | [日本語](README.ja.md)
 
-把手机短信变成 Agent 能直接查的本地 HTTP 接口。查数据库在请求时按需发生，没有任何轮询定时器。
+把手机短信变成 Agent 能直接查的本地 HTTP 接口。查数据库只在请求到达或新短信到达时发生；
+除了可选的主动推送，没有任何轮询定时器。
 
 本仓库包含两个客户端：
 
@@ -11,7 +12,7 @@
 | [android/](android/) | 手机 App：用 HTTPS 提供短信接口 |
 | [windows/](windows/) | Windows 桌面端：从已配对的手机同步并阅读 |
 
-每个 Release 同时挂两端产物（`SmsBridge-x.y.z.apk`、`Windows-SMS-Bridge-Setup-x.y.z.exe`），
+每个 Release 都带 APK；Windows 客户端有新版本时才附带 `Windows-SMS-Bridge-Setup-x.y.z.exe`。
 两端都从这个仓库的 Release 自动更新。
 
 ```
@@ -67,6 +68,7 @@ App 内另有 20 秒心跳开关（默认开）兜底其他 ROM。
 - **结构化查询**：按 天数 / 号码 / 卡槽（双卡）/ 关键词 / 收件箱或已发送 过滤，返回 JSON
 - **OTP 模式**：`purpose=otp` 只返回验证码 + 掩码正文
 - **增量事件**：ContentObserver 监听新短信实时入队，Agent 用 `since_seq` 拉取不重复
+- **主动推送**：新短信转发到 Telegram 或飞书，正文四行（来信号码/接收时间/接收卡号/内容），支持关键词过滤和间隔扫描补漏
 - **后台常驻**：`specialUse` 前台服务 + 双看门狗 + 开机自启，锁屏、划掉界面后仍可查询
 - **配对与审计**：6 位一次性码、可吊销、请求审计、限流
 - **只读**：不发短信、不写短信库、不复制短信到本地
