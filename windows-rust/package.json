@@ -1,0 +1,22 @@
+{
+  "name": "windows-sms-bridge-tauri",
+  "productName": "Windows SMS Bridge",
+  "version": "2.1.0",
+  "description": "Windows client for the Android SMS bridge (短信桥) — Tauri 2 rewrite",
+  "author": "Windows SMS Bridge",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build --no-bundle",
+    "dist": "tauri build && node scripts/rename-installer.cjs",
+    "i18n:gen": "node scripts/gen-rust-i18n.cjs",
+    "i18n:check": "node scripts/i18n-sweep.js",
+    "shim:check": "node scripts/check-shim.cjs",
+    "parity": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/parity-sync.ps1",
+    "measure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/measure.ps1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

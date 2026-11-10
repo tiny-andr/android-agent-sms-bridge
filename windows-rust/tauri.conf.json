@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Windows SMS Bridge",
+  "version": "2.1.0",
+  "identifier": "com.windowssmsbridge.windows",
+  "mainBinaryName": "Windows SMS Bridge",
+  "build": {
+    "frontendDist": "./web"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "Windows SMS Bridge",
+    "copyright": "MIT licensed",
+    "category": "Utility",
+    "shortDescription": "Windows client for the Android SMS bridge (短信桥)",
+    "icon": [
+      "assets/icon.ico",
+      "assets/icon.png",
+      "assets/icon@256.png"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "skip"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "installerIcon": "assets/icon.ico",
+        "uninstallerIcon": "assets/icon.ico",
+        "languages": ["SimpChinese", "English", "Japanese"],
+        "compression": "lzma"
+      }
+    }
+  }
+}
