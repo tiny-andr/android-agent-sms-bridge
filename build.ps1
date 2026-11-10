@@ -47,8 +47,10 @@ if ($Windows) {
     }
     Push-Location $win
     try {
-        if (-not (Test-Path (Join-Path $win 'node_modules'))) { & npm install --no-audit --no-fund }
-        if ($LASTEXITCODE -ne 0) { throw 'npm install failed' }
+        if (-not (Test-Path (Join-Path $win 'node_modules'))) {
+            & npm install --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { throw 'npm install failed' }
+        }
         $env:PATH = (Join-Path $env:USERPROFILE '.cargo\bin') + ';' + $env:PATH
         & npm run dist
         if ($LASTEXITCODE -ne 0) { throw 'Windows build failed' }
