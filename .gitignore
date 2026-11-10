@@ -10,6 +10,9 @@ local.properties
 *.apk
 *.aab
 
+# build.ps1 output: the APK plus the Windows installer (87 MB) and zip (111 MB)
+dist/
+
 # TLS private material — never commit, regenerate with tools/gen_cert.py
 keystore/
 android/app/src/main/assets/server.p12
