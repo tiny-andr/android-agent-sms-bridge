@@ -1,0 +1,58 @@
+[package]
+name = "windows-sms-bridge"
+version = "2.1.0"
+edition = "2021"
+rust-version = "1.77"
+description = "Windows client for the Android SMS bridge (短信桥)"
+license = "MIT"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png", "image-ico"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-single-instance = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+
+# HTTP + TLS. rustls only: the phone presents a self-signed certificate and the
+# client pins it, so there is no CA store involved for LAN requests.
+ureq = { version = "2.12", default-features = false, features = ["tls", "json"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls-pki-types = "1"
+tokio = { version = "1", features = ["time", "sync", "macros", "rt-multi-thread", "process", "fs"] }
+url = "2"
+
+sha2 = "0.10"
+hmac = "0.12"
+hex = "0.4"
+rand = "0.8"
+base64 = "0.22"
+aes-gcm = "0.10"
+chrono = "0.4"
+uuid = { version = "1", features = ["v4"] }
+
+# Windows-specific: DPAPI for the pairing token, registry for autostart.
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Security_Cryptography",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Com",
+    "Win32_System_Memory",
+] }
+winreg = "0.52"
+
+[profile.release]
+# Same knobs Electron ships with: small binary, no debug info, LTO for size.
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

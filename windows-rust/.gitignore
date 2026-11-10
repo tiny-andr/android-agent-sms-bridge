@@ -1,0 +1,15 @@
+# Rust / Tauri build output (cargo target + bundled installer)
+/target/
+
+# tauri-build generates the ACL schemas on every build
+/gen/
+
+# Node deps: only the Tauri CLI lives here
+node_modules/
+
+# Local verification output (screenshots, measurement tables)
+.shots/
+
+# Scratch profiles / logs from parity and manual runs
+.tmp-*/
+*.log
