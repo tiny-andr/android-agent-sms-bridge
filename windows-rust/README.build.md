@@ -76,8 +76,73 @@ pwsh -File scripts\measure.ps1
 Private Working Set / Working Set；结果同时打印到控制台和 `.shots\measure.md`。
 只结束脚本自己启动的进程树，已在运行的应用只做只读采样。
 
-## 其他脚本
+## 验收 / 自查（每一步都可复跑）
 
-- `npm run i18n:gen` — 生成 `src\i18n_table.rs`
-- `npm run i18n:check` — 前端 i18n 扫描
-- `npm run shim:check` — 校验 `web\` 的 `window.sms` shim 覆盖（沿用旧脚本）
+```powershell
+cd H:\Project\hermes-android-sms\windows-rust
+
+cargo test                                   # 37 个单元测试
+cargo test --test live_protocol -- --ignored # 真机：签名请求必须 200，错证书必须被拒
+cargo test --test live_updater  -- --ignored # 真 GitHub release：读版本 + digest
+$env:RUN_UPDATE_DOWNLOAD='1'; cargo test --test live_updater live_update_download -- --ignored --nocapture  # 真下载 + SHA-256 校验
+node scripts\shim:check 2>$null; node scripts\check-shim.cjs   # 22 通道契约
+npm run i18n:check                            # 三语扫描（需 NODE_PATH 指向 ..\windows\node_modules）
+powershell -File scripts\parity-sync.ps1      # 新旧客户端同机同步，逐字段对比缓存
+pwsh -File scripts\measure.ps1                # 体积 / 内存对比
+```
+
+说明：
+
+- `i18n:check` 需要在 `windows-rust` 里设置 `$env:NODE_PATH='..\windows\node_modules'`
+  （它借 Electron 渲染真实页面），并先 `Remove-Item Env:\ELECTRON_RUN_AS_NODE`。
+  改完后跑出来是 28 个状态 / 13 个失败 / 40 处缺陷，**与旧 Electron 渲染器的报告逐条完全相同**
+  （这些是旧版 app.js 里的历史遗留，不是重写引入的）。
+- `parity-sync.ps1` 会各给两个客户端一份干净 profile（保留配对、清空缓存），
+  双方各跑一次完整 30 天同步，然后按 id 对比每一条短信的
+  address/body/date/type/slot/subId/carrier/simNumber/read 以及会话聚合结果。
+- 真机与网络相关的测试用 `--ignored` 标注，CI 里默认跳过。
+
+## 实测数据（2026-11-10，本机）
+
+| 指标 | 旧 Electron | 新 Tauri |
+| --- | --- | --- |
+| 安装包 | 83.69 MB | **2.22 MB** |
+| 解包目录 | 268.56 MB | 单 exe **5.37 MB** |
+| 安装后磁盘占用 | 268.91 MB | **5.60 MB** |
+| 空闲 60 s 主进程 Private WS | 79.84 MB | **14.14 MB** |
+| 空闲 60 s 主进程 Working Set | 116.32 MB | **41.90 MB** |
+| 空闲 60 s 全进程树 Private WS | 384.69 MB | **281.22 MB**（7 个进程：主进程 + 6 个 WebView2） |
+| 全进程树 Working Set | 514.86 MB | **492.21 MB** |
+
+体积差主要来自“不再打包 Chromium”：WebView2 用系统的，安装包只剩 Rust 二进制和前端资源；
+内存上主进程从 80 MB 降到 14 MB，整棵树因为 WebView2 同样走多进程，差距缩小但仍低约 27%。
+
+真机同步一致性（同一台手机、同一时间窗、双方都从空缓存各跑一次完整同步）：
+
+```
+gt5: 6 messages on both sides
+gt5: 6 messages compared field by field   (含 slot / carrier / simNumber 双卡字段)
+gt5: SIM labels ["0|中国电信|+8619973712132","1|中国电信|+8617722562609"]
+gt5: 4 conversations identical
+RESULT: caches are equivalent
+```
+
+## 与旧 Electron 版的行为差异（有意为之）
+
+1. **修复“删掉的手机重启后又回来”**：旧 `migrate.js` 每次启动都把 `SMS Glass` 老 profile
+   里缺失的手机合并回来，删除无效（还会把清掉的缓存补回来）。新实现加了两个兼容键：
+   `legacyMigrated`（每个老 profile 只迁移一次）和 `removedPhoneIds`（删除墓碑），
+   并且只在目标 profile 为空时才做老 profile 恢复。JSON 格式没变，旧客户端会忽略这两个键。
+2. **IPC 命令名映射**：渲染器看到的通道名仍是 `state:get` / `window:toggle-maximize` 等
+   22 个原名；Tauri 由 Rust 函数名派生命令名，因此 `web/ui/tauri.js` 里做了机械映射
+   （`:`/`-` → `_`，一通道一命令），`scripts/check-shim.cjs` 逐条断言。
+3. 根证书校验用 rustls 自定义 verifier：逐字节比较证书 DER（比 CA 链校验更严格），
+   不做主机名匹配（手机证书签给 LAN IP，旧实现同样关掉了 hostname 校验）。
+4. 标题栏拖拽改由 `tauri.js` 调 `startDragging()`（WebView2 不认 `-webkit-app-region`）。
+5. UI 缩放改用 WebView2 的 zoom factor（`webview.set_zoom`），行为与 Electron 的
+   `setZoomFactor` 一致。
+6. 安装包文件名由 `scripts/rename-installer.cjs` 改成旧约定（Tauri 不支持配置该项），
+   `npm run dist` 已自动执行。
+7. 更新检查完全照旧：只认 GitHub release 的 `digest`，镜像只用于下载。当前最新 release
+   （v2.2.0）只带 APK、没有 Windows 安装包，因此现在不会提示更新——这与旧客户端行为一致。
+
