@@ -39,19 +39,26 @@ if ($Android) {
 
 if ($Windows) {
     Write-Host '== Windows =='
-    $win = Join-Path $root 'windows'
+    $win = Join-Path $root 'windows-rust'
+    $cargo = (Get-Command cargo -ErrorAction SilentlyContinue).Source
+    if (-not $cargo) {
+        $cargo = Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe'
+        if (-not (Test-Path $cargo)) { throw 'cargo not found — install the Rust toolchain first' }
+    }
     Push-Location $win
     try {
-        if (-not (Test-Path (Join-Path $win 'node_modules'))) { & npm ci }
+        if (-not (Test-Path (Join-Path $win 'node_modules'))) { & npm install --no-audit --no-fund }
+        if ($LASTEXITCODE -ne 0) { throw 'npm install failed' }
+        $env:PATH = (Join-Path $env:USERPROFILE '.cargo\bin') + ';' + $env:PATH
         & npm run dist
         if ($LASTEXITCODE -ne 0) { throw 'Windows build failed' }
     } finally {
         Pop-Location
     }
     $version = (Get-Content (Join-Path $win 'package.json') -Raw | ConvertFrom-Json).version
-    Get-ChildItem (Join-Path $win 'dist') -File |
-        Where-Object { $_.Name -match 'Setup-.*\.exe$' -or $_.Name -match '-win\.zip$' } |
-        Copy-Item -Destination $dist -Force
+    $installer = Join-Path $win "target\release\bundle\nsis\Windows-SMS-Bridge-Setup-$version.exe"
+    if (-not (Test-Path $installer)) { throw "installer not found: $installer" }
+    Copy-Item $installer (Join-Path $dist "Windows-SMS-Bridge-Setup-$version.exe") -Force
     Write-Host "  -> dist\Windows-SMS-Bridge-Setup-$version.exe"
 }
 

@@ -109,8 +109,8 @@ builds work without a proxy.
 ## Windows client
 
 The desktop app lives in `windows-rust/` — a Tauri 2 client that uses the system
-WebView2 runtime. The old Electron client under `windows/` is kept only as a
-reference and is no longer built or released.
+WebView2 runtime. The old Electron client was removed from the working tree after the
+rewrite; its source stays in git history (commit `cd17dda`) if you need to compare.
 
 Requirements: Rust with the MSVC toolchain, plus Node.js for the Tauri CLI.
 

@@ -26,7 +26,15 @@ if ($LASTEXITCODE -ne 0) { throw 'profile preparation failed' }
 # ---------------------------------------------------------------- Electron run
 Write-Host '[parity] launching the Electron client (fresh full sync)'
 $electron = Join-Path $repoRoot 'windows\node_modules\electron\dist\electron.exe'
-if (-not (Test-Path $electron)) { throw "electron.exe not found at $electron" }
+if (-not (Test-Path $electron)) {
+    Write-Host '[parity] the old Electron tree is not in the working tree anymore.'
+    Write-Host '         Restore it once if you want to re-run this comparison:'
+    Write-Host '           git checkout cd17dda -- windows'
+    Write-Host '           cd windows; npm ci; cd ..'
+    Write-Host '         (the comparison also needs the cache the Electron client wrote,'
+    Write-Host '          which this script regenerates from scratch.)'
+    exit 2
+}
 $env:SMSGLASS_DATA_DIR = $electronDir
 Remove-Item Env:\ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 $proc = Start-Process -FilePath $electron -ArgumentList (Join-Path $repoRoot 'windows') -PassThru `

@@ -1,6 +1,7 @@
 # Windows 客户端构建说明（Tauri 2）
 
-`windows-rust\` 是用 Tauri 2 重写的 Windows 客户端，替换旧的 Electron 客户端（`..\windows\`，只读参考）。
+`windows-rust\` 是用 Tauri 2 重写的 Windows 客户端。旧的 Electron 客户端已从工作区移除，
+源码仍保留在 git 历史（提交 `cd17dda`）；需要对照时：`git checkout cd17dda -- windows`。
 
 ## 环境
 
@@ -71,7 +72,8 @@ NSIS 模板（Tauri 2）的行为：`installMode=currentUser` 时安装到
 pwsh -File scripts\measure.ps1
 ```
 
-按顺序测量旧 Electron（`..\windows\dist\win-unpacked`）与新 Tauri（`target\release`）：
+按顺序测量旧 Electron 与新 Tauri（`target\release`）。旧客户端目录不在工作区时，旧的一侧显示“—”；
+要补全就从 git 历史恢复（`git checkout cd17dda -- windows`）并 `npm ci && npm run pack`：
 安装包大小、解包目录大小、安装后磁盘占用、空闲 60 s 与同步后的主进程
 Private Working Set / Working Set；结果同时打印到控制台和 `.shots\measure.md`。
 只结束脚本自己启动的进程树，已在运行的应用只做只读采样。
@@ -93,7 +95,8 @@ pwsh -File scripts\measure.ps1                # 体积 / 内存对比
 
 说明：
 
-- `i18n:check` 需要在 `windows-rust` 里设置 `$env:NODE_PATH='..\windows\node_modules'`
+- `i18n:check` 需要本机有 Electron（只跑这个扫描时临时装即可：`npm install --no-save electron`），
+  并把 `$env:NODE_PATH` 指向 `windows-rust\node_modules`。
   （它借 Electron 渲染真实页面），并先 `Remove-Item Env:\ELECTRON_RUN_AS_NODE`。
   改完后跑出来是 28 个状态 / 13 个失败 / 40 处缺陷，**与旧 Electron 渲染器的报告逐条完全相同**
   （这些是旧版 app.js 里的历史遗留，不是重写引入的）。
