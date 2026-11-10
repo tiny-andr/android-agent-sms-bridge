@@ -207,8 +207,7 @@ function initials(addr) {
 }
 
 /** Repos shown in the About sheet. */
-const REPO_PHONE = 'https://github.com/tiny-andr/android-agent-sms-bridge';
-const REPO_SELF = 'https://github.com/tiny-andr/android-agent-sms-bridge';
+const REPO_URL = 'https://github.com/tiny-andr/android-agent-sms-bridge';
 
 const THEMES = ['dark', 'light', 'paper'];
 const THEME_NEXT = { dark: 'light', light: 'paper', paper: 'dark' };
@@ -1203,11 +1202,6 @@ function openSettings() {
 }
 
 function openAbout() {
-  const selfRepo = REPO_SELF
-    ? `<a class="link-out" data-external="${esc(REPO_SELF)}">Windows SMS Bridge<svg viewBox="0 0 16 16" class="lo-ic"><path d="M6.2 3.4h6.4v6.4M12.6 3.4 4.2 11.8"/></svg></a>
-       <span class="lo-note">本程序 · MIT</span>`
-    : `<span class="lo-pending">本程序仓库：GitHub 推送后在此显示</span>`;
-
   openModal(() => `
     <div class="modal-title">
       <span class="logo" style="width:36px;height:36px;border-radius:12px;">${brandMark()}</span>
@@ -1231,10 +1225,7 @@ function openAbout() {
       手机证书指纹随设备记录保存。本程序只读，不会向手机写入任何内容。
     </div>
     <div class="hint-line">
-      <b>开源与致谢</b><br />
-      <a class="link-out" data-external="${esc(REPO_PHONE)}">android-agent-sms-bridge<svg viewBox="0 0 16 16" class="lo-ic"><path d="M6.2 3.4h6.4v6.4M12.6 3.4 4.2 11.8"/></svg></a>
-      <span class="lo-note">手机端短信桥 · MIT</span><br />
-      ${selfRepo}
+      <a class="link-out" data-external="${esc(REPO_URL)}">github.com/tiny-andr/android-agent-sms-bridge<svg viewBox="0 0 16 16" class="lo-ic"><path d="M6.2 3.4h6.4v6.4M12.6 3.4 4.2 11.8"/></svg></a>
     </div>
     <div class="modal-actions">
       <button class="btn ghost" id="btnCheckUpdate">检查更新</button>

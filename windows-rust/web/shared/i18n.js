@@ -245,10 +245,6 @@
     '本地存储': 'Local storage',
     '短信缓存在本机 userData 目录；配对 token 由 Windows DPAPI 加密，仅当前 Windows 账户可解密；手机证书指纹随设备记录保存。本程序只读，不会向手机写入任何内容。':
       'Messages are cached in this app’s userData folder. The pairing token is encrypted with Windows DPAPI and only this Windows account can decrypt it; the pinned certificate fingerprint is stored with the device. The app is read-only — it never writes to the phone.',
-    '开源与致谢': 'Open source',
-    '手机端短信桥 · MIT': 'Android app · MIT',
-    '本程序 · MIT': 'This app · MIT',
-    '本程序仓库：GitHub 推送后在此显示': 'This project’s repository will be linked here',
 
     /* ── toasts & menus ─────────────────────────────────────────────── */
     '已开启开机自启': 'Autostart enabled',
@@ -533,10 +529,6 @@
     '本地存储': 'ローカル保存',
     '短信缓存在本机 userData 目录；配对 token 由 Windows DPAPI 加密，仅当前 Windows 账户可解密；手机证书指纹随设备记录保存。本程序只读，不会向手机写入任何内容。':
       'メッセージはこのアプリの userData に保存されます。ペアリングトークンは Windows DPAPI で暗号化され、この Windows アカウントだけが復号できます。証明書のフィンガープリントは端末ごとに保存します。本アプリは読み取り専用で、端末には一切書き込みません。',
-    '开源与致谢': 'オープンソース',
-    '手机端短信桥 · MIT': 'Android アプリ · MIT',
-    '本程序 · MIT': '本アプリ · MIT',
-    '本程序仓库：GitHub 推送后在此显示': '本プロジェクトのリポジトリは後日ここに表示されます',
 
     '已开启开机自启': '自動起動を有効にしました',
     '已关闭开机自启': '自動起動を無効にしました',
