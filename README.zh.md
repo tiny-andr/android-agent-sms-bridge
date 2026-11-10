@@ -10,7 +10,7 @@
 | 组件 | 说明 |
 |---|---|
 | [android/](android/) | 手机 App：用 HTTPS 提供短信接口 |
-| [windows/](windows/) | Windows 桌面端：从已配对的手机同步并阅读 |
+| [windows-rust/](windows-rust/) | Windows 桌面端（Tauri 2，系统 WebView2）：从已配对的手机同步并阅读 |
 
 每个 Release 都带 APK；Windows 客户端有新版本时才附带 `Windows-SMS-Bridge-Setup-x.y.z.exe`。
 两端都从这个仓库的 Release 自动更新。

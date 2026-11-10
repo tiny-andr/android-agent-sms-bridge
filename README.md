@@ -11,7 +11,7 @@ Two clients live in this repository:
 | Component | What it is |
 |---|---|
 | [android/](android/) | Phone app: serves the SMS API over HTTPS |
-| [windows/](windows/) | Desktop client: syncs and reads from a paired phone |
+| [windows-rust/](windows-rust/) | Desktop client (Tauri 2, system WebView2): syncs and reads from a paired phone |
 
 Each release carries the APK, plus `Windows-SMS-Bridge-Setup-x.y.z.exe` whenever the desktop
 client changes. Both apps update themselves from this repository's releases.

@@ -11,7 +11,7 @@ SMS データベースはリクエスト時または新着 SMS の到着時に�
 | コンポーネント | 内容 |
 |---|---|
 | [android/](android/) | スマホアプリ：HTTPS で SMS API を提供 |
-| [windows/](windows/) | Windows クライアント：ペアリング済み端末から同期して閲覧 |
+| [windows-rust/](windows-rust/) | Windows クライアント（Tauri 2、システム WebView2）：ペアリング済み端末から同期して閲覧 |
 
 各リリースには APK を添付し、Windows クライアントが更新されたときは
 `Windows-SMS-Bridge-Setup-x.y.z.exe` も添付します。どちらもこのリポジトリのリリースから自動更新します。

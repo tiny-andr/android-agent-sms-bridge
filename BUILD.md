@@ -108,14 +108,30 @@ builds work without a proxy.
 
 ## Windows client
 
-The desktop app lives in `windows/` and needs Node.js 18+:
+The desktop app lives in `windows-rust/` — a Tauri 2 client that uses the system
+WebView2 runtime. The old Electron client under `windows/` is kept only as a
+reference and is no longer built or released.
 
-```bash
-cd windows
-npm ci
-npm run dist      # installer + portable zip into windows/dist/
-npm start         # run from source
+Requirements: Rust with the MSVC toolchain, plus Node.js for the Tauri CLI.
+
+```powershell
+cd windows-rust
+cargo build --release    # binary only: target\release\Windows SMS Bridge.exe
+npm install              # once: @tauri-apps/cli (pulls the NSIS bundler)
+npm run dist             # installer: target\release\bundle\nsis\Windows-SMS-Bridge-Setup-<ver>.exe
 ```
+
+`npm run dist` also renames the packager's default output
+(`Windows SMS Bridge_<ver>_x64-setup.exe`) to the release asset name the updater
+looks for; no extra step on release day.
+
+Data lives in `%APPDATA%\Windows SMS Bridge\` (`config.json` + `messages.json`) —
+the same files the Electron build used, so upgrading keeps every pairing and
+cached message. The pairing token is DPAPI-encrypted and only readable by the
+current Windows account.
+
+`windows-rust/README.build.md` documents the config keys, the measurement and
+parity scripts, and the verification commands.
 
 Both clients update themselves from this repository's GitHub Releases, so a release
 must be tagged `vX.Y.Z` and carry both `SmsBridge-X.Y.Z.apk` and
